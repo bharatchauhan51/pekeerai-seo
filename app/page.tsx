@@ -359,10 +359,11 @@ export default function App() {
   };
 
   const navLinks = [
-    { label: 'Features', id: 'features' },
-    { label: 'How it Works', id: 'how-it-works' },
-    { label: 'Pricing', id: 'pricing' },
-    { label: 'FAQ', id: 'faq' },
+    { label: 'Features', id: 'features', path: '/#features' },
+    { label: 'How it Works', id: 'how-it-works', path: '/#how-it-works' },
+    { label: 'Pricing', id: 'pricing', path: '/#pricing' },
+    { label: 'Blog', id: 'blog', path: '/blog' },
+    { label: 'FAQ', id: 'faq', path: '/#faq' },
   ];
 
   return (
@@ -431,7 +432,7 @@ export default function App() {
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-8">
               {navLinks.map(link => (
-                <a key={link.id} href={`#${link.id}`} onClick={(e) => scrollToSection(e, link.id)} className="text-sm text-neutral-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded">
+                <a key={link.id} href={link.path} onClick={(e) => link.path.startsWith('/#') && scrollToSection(e, link.id)} className="text-sm text-neutral-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded">
                   {link.label}
                 </a>
               ))}
@@ -453,7 +454,7 @@ export default function App() {
             <div className="md:hidden border-t border-white/5 bg-[#0a0a0a]/95 backdrop-blur-xl">
               <div className="px-6 py-4 flex flex-col gap-1">
                 {navLinks.map(link => (
-                  <a key={link.id} href={`#${link.id}`} onClick={(e) => scrollToSection(e, link.id)} className="py-3 text-neutral-300 hover:text-lime-400 transition-colors font-medium">
+                  <a key={link.id} href={link.path} onClick={(e) => { if (link.path.startsWith('/#')) scrollToSection(e, link.id); else setMobileMenuOpen(false); }} className="py-3 text-neutral-300 hover:text-lime-400 transition-colors font-medium">
                     {link.label}
                   </a>
                 ))}
