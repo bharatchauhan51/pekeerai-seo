@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: '/api/', // Block API routes from being indexed
         },
-        sitemap: 'https://pekeerai-seo.vercel.app/sitemap.xml', // Change to your custom domain
+        sitemap: 'https://www.pekkerai.com/sitemap.xml', // Custom domain
     };
 }

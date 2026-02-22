@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://pekeerai-seo.vercel.app'; // Change to absolute domain when you buy one e.g. https://pekkerai.com
+    const baseUrl = 'https://www.pekkerai.com'; // Custom domain
 
     return [
         {
