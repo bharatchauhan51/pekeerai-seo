@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, ReactNode, FormEvent, MouseEvent } from 'react';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 // Scroll Reveal Animation Component
-const RevealOnScroll = ({ children, delay = 0, className = "" }) => {
+const RevealOnScroll = ({ children, delay = 0, className = "" }: { children: ReactNode; delay?: number; className?: string }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
 
@@ -48,7 +48,7 @@ const RevealOnScroll = ({ children, delay = 0, className = "" }) => {
 };
 
 // FAQ Item Component (Accordion)
-const FaqItem = ({ question, answer }) => {
+const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -82,7 +82,7 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleWaitlistSubmit = (e) => {
+  const handleWaitlistSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (email) {
       setIsSubmitting(true);
@@ -103,7 +103,7 @@ export default function App() {
   const openModal = () => setIsModalOpen(true);
 
   // Smooth scroll handler
-  const scrollToSection = (e, sectionId) => {
+  const scrollToSection = (e: MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault();
     const section = document.getElementById(sectionId);
     if (section) {
