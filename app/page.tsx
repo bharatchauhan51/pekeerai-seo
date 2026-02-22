@@ -254,7 +254,7 @@ export default function App() {
           </h1>
           
           <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
-            The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just ₹50.
+            The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-300">
@@ -262,7 +262,7 @@ export default function App() {
               onClick={openModal}
               className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.97] text-white rounded-xl font-semibold text-lg flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-lg shadow-indigo-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
             >
-              Start Pro Plan - ₹499/mo <ArrowRight size={20} className="animate-bounce motion-reduce:animate-none" />
+              Start Pro Plan - $9/mo <ArrowRight size={20} className="animate-bounce motion-reduce:animate-none" />
             </button>
             <p className="text-sm text-slate-500 sm:hidden">No credit card required for waitlist</p>
           </div>
@@ -336,7 +336,7 @@ export default function App() {
           <RevealOnScroll className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4">ChatGPT alone isn't an SEO strategy.</h2>
             <p className="text-slate-600 text-lg">
-              Generic AI output lacks search intent, structure, and LSI keywords. Heavy enterprise SEO tools cost ₹10,000+/mo. PekkerAI sits perfectly in the middle.
+              Generic AI output lacks search intent, structure, and LSI keywords. Heavy enterprise SEO tools cost $200+/mo. PekkerAI sits perfectly in the middle.
             </p>
           </RevealOnScroll>
 
@@ -360,7 +360,7 @@ export default function App() {
                 <Zap size={24} />
               </div>
               <h3 className="text-xl font-bold mb-3">Unbeatable ROI</h3>
-              <p className="text-slate-600">At roughly ₹50 per article, you replace expensive freelance writers without sacrificing quality. Validate your niche faster than ever.</p>
+              <p className="text-slate-600">At roughly $1 per article, you replace expensive freelance writers without sacrificing quality. Validate your niche faster than ever.</p>
             </RevealOnScroll>
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function App() {
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Starter</h3>
                 <p className="text-slate-500 text-sm mb-6">Perfect for niche bloggers and solo founders.</p>
                 <div className="flex justify-center items-baseline gap-1 mb-2">
-                  <span className="text-4xl font-extrabold text-slate-900">₹499</span>
+                  <span className="text-4xl font-extrabold text-slate-900">$9</span>
                   <span className="text-slate-500 font-medium">/month</span>
                 </div>
               </div>
@@ -456,7 +456,7 @@ export default function App() {
                 <h3 className="text-xl font-bold text-indigo-900 mb-2">Pro</h3>
                 <p className="text-indigo-600/70 text-sm mb-6">For small teams scaling their content.</p>
                 <div className="flex justify-center items-baseline gap-1 mb-2">
-                  <span className="text-5xl font-extrabold text-slate-900">₹1,499</span>
+                  <span className="text-5xl font-extrabold text-slate-900">$29</span>
                   <span className="text-slate-500 font-medium">/month</span>
                 </div>
               </div>
@@ -498,7 +498,7 @@ export default function App() {
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Agency</h3>
                 <p className="text-slate-500 text-sm mb-6">For freelancers and agencies with clients.</p>
                 <div className="flex justify-center items-baseline gap-1 mb-2">
-                  <span className="text-4xl font-extrabold text-slate-900">₹3,999</span>
+                  <span className="text-4xl font-extrabold text-slate-900">$49</span>
                   <span className="text-slate-500 font-medium">/month</span>
                 </div>
               </div>
@@ -553,7 +553,7 @@ export default function App() {
             />
             <FaqItem 
               question="Do you offer a free trial?" 
-              answer="Because API costs are associated with every article generated, we do not offer a free trial. However, our ₹499 Starter plan is priced specifically so you can test the platform with minimal risk." 
+              answer="Because API costs are associated with every article generated, we do not offer a free trial. However, our $9 Starter plan is priced specifically so you can test the platform with minimal risk." 
             />
             <FaqItem 
               question="What happens if I hit my monthly article limit?" 
