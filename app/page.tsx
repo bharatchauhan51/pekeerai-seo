@@ -301,6 +301,7 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
 
   const handleWaitlistSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -402,53 +403,68 @@ export default function App() {
         }
       `}</style>
 
-      {/* ─── Navigation ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl" aria-label="Main navigation">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          {/* Logo */}
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded-lg" aria-label="PekkerAI — scroll to top">
-            <div className="w-9 h-9 bg-lime-400 rounded-lg flex items-center justify-center">
-              <Sparkles size={20} className="text-black" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">PekkerAI</span>
-          </button>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map(link => (
-              <a key={link.id} href={`#${link.id}`} onClick={(e) => scrollToSection(e, link.id)} className="text-sm text-neutral-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded">
-                {link.label}
-              </a>
-            ))}
-          </div>
-
-          {/* CTA + Hamburger */}
-          <div className="flex items-center gap-3">
-            <button onClick={openModal} className="hidden sm:flex px-5 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-semibold text-sm rounded-full transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]">
-              Get Early Access
-            </button>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen}>
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+      {/* ─── Header ─── */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex flex-col w-full">
+        {/* Promotional Banner */}
+        {isBannerVisible && (
+          <div className="bg-lime-400 text-black px-4 py-2.5 flex items-center justify-center relative tracking-tight text-sm font-semibold shadow-[0_4px_20px_rgba(163,230,53,0.15)] relative z-20">
+            <span className="flex items-center gap-2">
+              <Sparkles size={16} /> Beta Launch: Get 50% off for life. Use code <strong className="bg-black/10 px-2 py-0.5 rounded ml-1 tracking-widest font-bold">FOUNDER50</strong>
+            </span>
+            <button onClick={() => setIsBannerVisible(false)} className="absolute right-4 p-1.5 hover:bg-black/10 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black" aria-label="Dismiss banner">
+              <X size={16} />
             </button>
           </div>
-        </div>
+        )}
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/5 bg-[#0a0a0a]/95 backdrop-blur-xl">
-            <div className="px-6 py-4 flex flex-col gap-1">
+        {/* ─── Navigation ─── */}
+        <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl relative z-10 relative" aria-label="Main navigation">
+          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            {/* Logo */}
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded-lg" aria-label="PekkerAI — scroll to top">
+              <div className="w-9 h-9 bg-lime-400 rounded-lg flex items-center justify-center">
+                <Sparkles size={20} className="text-black" />
+              </div>
+              <span className="text-xl font-bold tracking-tight">PekkerAI</span>
+            </button>
+
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-8">
               {navLinks.map(link => (
-                <a key={link.id} href={`#${link.id}`} onClick={(e) => scrollToSection(e, link.id)} className="py-3 text-neutral-300 hover:text-lime-400 transition-colors font-medium">
+                <a key={link.id} href={`#${link.id}`} onClick={(e) => scrollToSection(e, link.id)} className="text-sm text-neutral-400 hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded">
                   {link.label}
                 </a>
               ))}
-              <button onClick={() => { openModal(); setMobileMenuOpen(false); }} className="mt-2 w-full py-3 bg-lime-400 hover:bg-lime-300 text-black font-semibold rounded-full transition-all active:scale-95">
+            </div>
+
+            {/* CTA + Hamburger */}
+            <div className="flex items-center gap-3">
+              <button onClick={openModal} className="hidden sm:flex px-5 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-semibold text-sm rounded-full transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]">
                 Get Early Access
+              </button>
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen}>
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
             </div>
           </div>
-        )}
-      </nav>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-white/5 bg-[#0a0a0a]/95 backdrop-blur-xl">
+              <div className="px-6 py-4 flex flex-col gap-1">
+                {navLinks.map(link => (
+                  <a key={link.id} href={`#${link.id}`} onClick={(e) => scrollToSection(e, link.id)} className="py-3 text-neutral-300 hover:text-lime-400 transition-colors font-medium">
+                    {link.label}
+                  </a>
+                ))}
+                <button onClick={() => { openModal(); setMobileMenuOpen(false); }} className="mt-2 w-full py-3 bg-lime-400 hover:bg-lime-300 text-black font-semibold rounded-full transition-all active:scale-95">
+                  Get Early Access
+                </button>
+              </div>
+            </div>
+          )}
+        </nav>
+      </header>
 
       <main>
         {/* ─── Hero Section ─── */}

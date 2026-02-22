@@ -13,8 +13,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://pekeerai-seo.vercel.app'), // Update this when you have a custom domain
   title: "PekkerAI — AI-Powered SEO Content Pipeline | Rank Higher in Minutes",
   description: "The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.",
+  applicationName: 'PekkerAI',
+  keywords: ['SEO content generator', 'AI writer', 'SEO pipeline', 'automated blog writing', 'SEO for founders'],
+  authors: [{ name: 'PekkerAI Team' }],
+  creator: 'PekkerAI',
+  publisher: 'PekkerAI',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: 'PekkerAI — AI-Powered SEO Content Pipeline',
+    description: 'Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.',
+    url: 'https://pekeerai-seo.vercel.app', // Update when you have a custom domain
+    siteName: 'PekkerAI',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PekkerAI — AI-Powered SEO Content Pipeline',
+    description: 'Go from a target keyword to a publish-ready, highly researched article for just $1.',
+    creator: '@PekkerAI',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
