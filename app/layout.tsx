@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pekker SEO",
-  description: "Generate SEO metadata for your website with ease using Pekker SEO.",
+  title: "PekkerAI — AI-Powered SEO Content Pipeline | Rank Higher in Minutes",
+  description: "The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.",
 };
 
 export default function RootLayout({
