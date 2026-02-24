@@ -80,6 +80,7 @@ export default function BlogPost() {
                                 <li className="pl-0"><a href="#koala-wins" className="text-lime-400 hover:text-lime-300 no-underline transition-colors flex items-center gap-2"><span className="text-neutral-600 font-mono text-xs">05</span> Where Koala Writer Wins</a></li>
                                 <li className="pl-0"><a href="#seo-quality" className="text-lime-400 hover:text-lime-300 no-underline transition-colors flex items-center gap-2"><span className="text-neutral-600 font-mono text-xs">06</span> SEO Output Quality: Does the Content Rank?</a></li>
                                 <li className="pl-0"><a href="#verdict" className="text-lime-400 hover:text-lime-300 no-underline transition-colors flex items-center gap-2"><span className="text-neutral-600 font-mono text-xs">07</span> The Bottom Line</a></li>
+                                <li className="pl-0"><a href="#faq" className="text-lime-400 hover:text-lime-300 no-underline transition-colors flex items-center gap-2"><span className="text-neutral-600 font-mono text-xs">08</span> FAQ</a></li>
                             </ul>
                         </div>
 
@@ -470,6 +471,80 @@ export default function BlogPost() {
                         <p>
                             <strong>If you're unsure:</strong> PekkerAI's Starter plan is $9/month with no credit card required for the free trial. Koala Writer also has a free trial. Run one article through each. The right tool will be obvious from how each workflow fits your existing process — not from reading a comparison article.
                         </p>
+
+                        <h2 id="faq" className="text-2xl font-bold text-white mt-16 mb-8">FAQ: PekkerAI vs Koala Writer</h2>
+
+                        <div className="space-y-4 my-8">
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Is PekkerAI cheaper than Koala Writer?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    At equivalent tiers, PekkerAI is cheaper per article. Both start at $9/month. At $49/month, PekkerAI delivers 100 articles ($0.49 each) vs Koala Writer's approximately 60 articles ($0.82 each) based on word count equivalents. PekkerAI is the lower cost-per-article option at scale.
+                                </div>
+                            </details>
+
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Does PekkerAI have WordPress integration?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    WordPress direct publish is confirmed on PekkerAI's product roadmap for Q2 2025. It is not available today. Koala Writer currently offers WordPress direct publish. If this is a hard requirement for you right now, Koala Writer has the advantage.
+                                </div>
+                            </details>
+
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Which tool produces better SEO content — PekkerAI or Koala Writer?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    Both produce structurally sound SEO articles based on SERP analysis, LSI keyword integration, and best-practice heading structures. Neither tool produces content that should be published raw — both require a human editing and enrichment layer to meet Google's E-E-A-T standards. The output quality difference is marginal; the workflow and pricing difference is significant.
+                                </div>
+                            </details>
+
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Can PekkerAI write Amazon affiliate articles?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    Not currently. PekkerAI is focused on standard long-form SEO articles for product blogs and authority sites. Koala Writer has a dedicated Amazon affiliate article mode with product comparison table generation. If Amazon affiliate content is your primary use case, Koala Writer is the better fit.
+                                </div>
+                            </details>
+
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Does Koala Writer have content scheduling?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    No. Koala Writer offers WordPress direct publish but no content scheduling or auto-publish queue. PekkerAI's scheduling feature is planned for Q3 2025. Once live, it will be the only lean AI content tool offering keyword → generate → schedule → auto-publish in a single workflow.
+                                </div>
+                            </details>
+
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Which is better for SEO freelancers?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    PekkerAI's Agency plan ($49/month, 100 articles) is specifically optimised for the SEO freelancer use case — the lowest cost-per-article in the market, competitor URL analysis built in, and a workflow designed around managing multiple client accounts. For freelancers billing clients per article or per deliverable, PekkerAI's economics are stronger.
+                                </div>
+                            </details>
+
+                            <details className="group bg-[#111] border border-white/10 rounded-xl overflow-hidden open:border-lime-400/30 transition-colors">
+                                <summary className="flex items-center justify-between p-5 font-bold text-white cursor-pointer list-none hover:bg-white/[0.02] transition-colors">
+                                    <span>Can I use both PekkerAI and Koala Writer?</span>
+                                    <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
+                                </summary>
+                                <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
+                                    Yes. Some content teams use PekkerAI for structured, founder-focused or freelancer SEO content and Koala Writer for affiliate and real-time data articles. They're not mutually exclusive. At $9/month each, running both simultaneously during a trial period is a low-cost way to find your preferred workflow before committing.
+                                </div>
+                            </details>
+                        </div>
                     </div>
 
                     <hr className="border-white/10 my-16" />
