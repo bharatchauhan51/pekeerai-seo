@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.pekkerai.com'), // Custom domain
+  metadataBase: new URL('https://www.pekkerai.com'),
   title: "PekkerAI — AI-Powered SEO Content Pipeline | Rank Higher in Minutes",
   description: "The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.",
   applicationName: 'PekkerAI',
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'PekkerAI — AI-Powered SEO Content Pipeline',
     description: 'Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.',
-    url: 'https://www.pekkerai.com', // Custom domain
+    url: 'https://www.pekkerai.com',
     siteName: 'PekkerAI',
     locale: 'en_US',
     type: 'website',
@@ -63,7 +64,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

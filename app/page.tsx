@@ -440,6 +440,9 @@ export default function App() {
 
             {/* CTA + Hamburger */}
             <div className="flex items-center gap-3">
+              <a href="/login" className="hidden sm:flex px-4 py-2.5 text-neutral-400 hover:text-white text-sm font-medium transition-colors">
+                Log In
+              </a>
               <button onClick={openModal} className="hidden sm:flex px-5 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-semibold text-sm rounded-full transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]">
                 Get Early Access
               </button>
@@ -469,7 +472,7 @@ export default function App() {
 
       <main>
         {/* ─── Hero Section ─── */}
-        <header className="relative pt-40 pb-32 px-6 overflow-hidden">
+        <header className="relative pt-28 sm:pt-40 pb-20 sm:pb-32 px-4 sm:px-6 overflow-hidden">
           {/* Glowing orb background */}
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-lime-500/10 blur-[150px] rounded-full pointer-events-none" style={{ animation: 'glow-pulse 6s ease-in-out infinite' }}></div>
 
@@ -530,14 +533,14 @@ export default function App() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1] animate-fade-in-up delay-100">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 sm:mb-8 leading-[1.1] animate-fade-in-up delay-100">
               Rank Higher in Minutes,{' '}
               <br className="hidden sm:block" />
               <span className="text-lime-400">Not Hours.</span>
             </h1>
 
             {/* Sub */}
-            <p className="text-lg sm:text-xl text-neutral-400 mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+            <p className="text-base sm:text-lg md:text-xl text-neutral-400 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
               The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1.
             </p>
 
@@ -552,7 +555,7 @@ export default function App() {
             </div>
 
             {/* Trust badges */}
-            <div className="flex items-center justify-center gap-6 mt-10 text-sm text-neutral-500 animate-fade-in-up delay-400">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-10 text-xs sm:text-sm text-neutral-500 animate-fade-in-up delay-400">
               <span className="flex items-center gap-1.5"><CheckCircle2 size={16} className="text-lime-400" /> No bloated dashboards</span>
               <span className="flex items-center gap-1.5"><CheckCircle2 size={16} className="text-lime-400" /> Cancel anytime</span>
             </div>
@@ -570,7 +573,7 @@ export default function App() {
         <AppDemoMockup />
 
         {/* ─── Features (Bento Grid) ─── */}
-        <section id="features" className="py-24 px-6">
+        <section id="features" className="py-16 sm:py-24 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto">
             <RevealOnScroll className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -673,7 +676,7 @@ export default function App() {
         </section>
 
         {/* ─── Testimonials / Social Proof ─── */}
-        <section className="py-24 px-6 relative">
+        <section className="py-16 sm:py-24 px-4 sm:px-6 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-lime-400/[0.02] to-transparent pointer-events-none"></div>
           <div className="max-w-5xl mx-auto relative z-10">
             <RevealOnScroll className="text-center mb-16">
@@ -713,7 +716,7 @@ export default function App() {
         </section>
 
         {/* ─── How It Works ─── */}
-        <section id="how-it-works" className="py-24 px-6 relative">
+        <section id="how-it-works" className="py-16 sm:py-24 px-4 sm:px-6 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-lime-400/[0.02] to-transparent pointer-events-none"></div>
           <div className="max-w-5xl mx-auto relative z-10">
             <RevealOnScroll className="text-center mb-16">
@@ -747,7 +750,7 @@ export default function App() {
         </section>
 
         {/* ─── Pricing ─── */}
-        <section id="pricing" className="py-24 px-6">
+        <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <RevealOnScroll className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -834,7 +837,7 @@ export default function App() {
         </section>
 
         {/* ─── FAQ ─── */}
-        <section id="faq" className="py-24 px-6">
+        <section id="faq" className="py-16 sm:py-24 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto">
             <RevealOnScroll className="text-center mb-16">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -857,7 +860,7 @@ export default function App() {
         </section>
 
         {/* ─── Newsletter / CTA Banner ─── */}
-        <section className="py-24 px-6">
+        <section className="py-16 sm:py-24 px-4 sm:px-6">
           <RevealOnScroll className="max-w-4xl mx-auto">
             <div className="relative rounded-3xl overflow-hidden">
               {/* Green glow bg */}
@@ -881,7 +884,7 @@ export default function App() {
 
       {/* ─── Footer ─── */}
       <footer className="border-t border-white/5 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
