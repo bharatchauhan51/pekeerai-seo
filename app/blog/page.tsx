@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'pekkerai-vs-koala-writer',
+        title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth Your Money in 2025?',
+        description: "Comparing PekkerAI and Koala Writer on pricing, features, and results. One charges $1/article. One dominates the affiliate blogging niche.",
+        date: 'February 2025',
+        category: 'Comparison',
+    },
+    {
         slug: 'does-google-penalize-ai-generated-content',
         title: 'Does Google Penalize AI-Generated Content? Here\'s the Real Answer (2025)',
         description: "Google doesn't penalize AI content — but it does penalize bad content. Learn exactly what triggers penalties and what Google rewards.",
