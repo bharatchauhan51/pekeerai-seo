@@ -165,7 +165,7 @@ export default function BlogPost() {
 
                         <h2 className="text-2xl font-bold text-white mt-12 mb-6">6. Real-World Data: Does AI Content Actually Rank?</h2>
                         <p>
-                            The numbers are clear. <strong>AI-generated content accounts for over 16% of all Google search results</strong>. That's not fringe content; it's actively ranking at scale. The difference between content that thrives and content that gets suppressed comes down to quality and editorial oversight, not the tool used to draft it.
+                            The numbers are clear. <strong>AI-generated content accounts for over 16% of all Google search results</strong>. That's not fringe content; it's actively ranking at scale. The difference between content that thrives and content that gets suppressed comes down to quality and editorial oversight, not the tool used to draft it (though choosing the right <Link href="/blog/pekkerai-vs-koala-writer" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">AI SEO content tool</Link> to build that initial structural draft certainly gives you a head start).
                         </p>
 
                         <h2 className="text-2xl font-bold text-white mt-12 mb-6">7. How to Use AI Content Safely — The Right Workflow</h2>
@@ -177,7 +177,7 @@ export default function BlogPost() {
                             </div>
                             <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
                                 <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle2 className="text-lime-400" size={20} /> Step 2: Generate a Structured Brief First</h3>
-                                <p className="text-sm m-0">Define the audience, tone, and headings <em>before</em> generating. Tools like PekkerAI do this automatically by analyzing SERP results.</p>
+                                <p className="text-sm m-0">Define the audience, tone, and headings <em>before</em> generating. Tools like PekkerAI do this automatically by analyzing SERP results. <span className="text-neutral-400 mt-2 block">If you're still deciding which generator is right for your workflow, read our detailed <Link href="/blog/pekkerai-vs-koala-writer" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">PekkerAI vs Koala Writer comparison</Link>.</span></p>
                             </div>
                             <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
                                 <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle2 className="text-lime-400" size={20} /> Step 3: Always Add the Human Layer</h3>

@@ -63,7 +63,7 @@ export default function BlogPost() {
 
                     <div className="space-y-8 text-neutral-300 text-lg leading-relaxed">
                         <p>
-                            If you're here, you're probably looking at both and wondering whether the price difference matters, whether the features are actually different, or whether either tool will survive Google's algorithm. This comparison covers all of it — pricing per article, feature-by-feature breakdown, SERP performance, and a clear verdict for each type of user.
+                            If you're here, you're probably looking at both and wondering whether the price difference matters, whether the features are actually different, or whether either tool will survive Google's algorithm (spoiler: <Link href="/blog/does-google-penalize-ai-generated-content" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">Google doesn't penalize AI content</Link>, just bad content). This comparison covers all of it — pricing per article, feature-by-feature breakdown, SERP performance, and a clear verdict for each type of user.
                         </p>
 
                         <p className="text-sm text-neutral-400 italic">
@@ -343,7 +343,7 @@ export default function BlogPost() {
 
                         <h2 id="seo-quality" className="text-2xl font-bold text-white mt-12 mb-6">6. SEO Output Quality: Does the Content Actually Rank?</h2>
                         <p>
-                            This is the question that matters most — and the honest answer is that neither tool guarantees rankings. Google ranks content, not tools. What both tools produce is a structural foundation that follows SEO best practices. Whether that foundation ranks depends on your domain authority, the keyword difficulty you target, and the human editing layer you apply on top.
+                            This is the question that matters most — and the honest answer is that neither tool guarantees rankings. Google ranks content, not tools (in fact, we wrote a deep dive on <Link href="/blog/does-google-penalize-ai-generated-content" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">why Google doesn't penalize AI content</Link> to explain exactly how that works). What both tools produce is a structural foundation that follows SEO best practices. Whether that foundation ranks depends on your domain authority, the keyword difficulty you target, and the human editing layer you apply on top.
                         </p>
 
                         <div className="overflow-x-auto my-8">
