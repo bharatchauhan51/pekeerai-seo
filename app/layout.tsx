@@ -53,7 +53,6 @@ export const metadata: Metadata = {
   },
   verification: {
     other: {
-      'msvalidate.01': 'PLACE_YOUR_BING_CODE_HERE',
     },
   },
 };
