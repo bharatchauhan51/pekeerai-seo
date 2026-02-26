@@ -13,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
                 allow: '/',
             }
         ],
-        sitemap: 'https://www.pekkerai.com/sitemap.xml', // Custom domain
+        sitemap: 'https://pekkerai.com/sitemap.xml', // Custom domain
     };
 }

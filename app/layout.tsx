@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.pekkerai.com'), // Custom domain
+  metadataBase: new URL('https://pekkerai.com'), // Custom domain
   title: "PekkerAI — AI-Powered SEO Content Pipeline | Rank Higher in Minutes",
   description: "The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.",
   applicationName: 'PekkerAI',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'PekkerAI — AI-Powered SEO Content Pipeline',
     description: 'Go from a target keyword to a publish-ready, highly researched article for just $1. Rank higher in minutes, not hours.',
-    url: 'https://www.pekkerai.com', // Custom domain
+    url: 'https://pekkerai.com', // Custom domain
     siteName: 'PekkerAI',
     locale: 'en_US',
     type: 'website',
@@ -49,6 +49,11 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,
+    },
+  },
+  verification: {
+    other: {
+      'msvalidate.01': 'PLACE_YOUR_BING_CODE_HERE',
     },
   },
 };

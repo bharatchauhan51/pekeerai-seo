@@ -3,19 +3,19 @@ import Link from 'next/link';
 import { Sparkles, ArrowRight, CheckCircle2, ChevronLeft, Info, AlertTriangle } from 'lucide-react';
 
 export const metadata: Metadata = {
-    title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth It? (2025)',
+    title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth It? (2026)',
     description: "Comparing PekkerAI and Koala Writer on pricing, features, and results. One charges $1/article. One dominates the affiliate blogging niche. We break down who wins for each use case.",
-    keywords: ['pekkerai vs koala writer', 'koala writer alternative', 'ai seo content tool', 'ai article generator comparison', 'best ai writing tool 2025'],
+    keywords: ['pekkerai vs koala writer', 'koala writer alternative', 'ai seo content tool', 'ai article generator comparison', 'best ai writing tool 2026'],
     openGraph: {
-        title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth It? (2025)',
+        title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth It? (2026)',
         description: "Comparing PekkerAI and Koala Writer on pricing, features, and results. One charges $1/article. One dominates the affiliate blogging niche. We break down who wins.",
-        url: 'https://www.pekkerai.com/blog/pekkerai-vs-koala-writer',
+        url: 'https://pekkerai.com/blog/pekkerai-vs-koala-writer',
         type: 'article',
-        publishedTime: '2025-02-24T00:00:00.000Z',
+        publishedTime: '2026-02-24T00:00:00.000Z',
         authors: ['PekkerAI Team'],
     },
     alternates: {
-        canonical: 'https://www.pekkerai.com/blog/pekkerai-vs-koala-writer',
+        canonical: 'https://pekkerai.com/blog/pekkerai-vs-koala-writer',
     },
 };
 
@@ -31,8 +31,8 @@ export default function BlogPost() {
                         </div>
                         <span className="text-xl font-bold tracking-tight text-white">PekkerAI</span>
                     </Link>
-                    <Link href="/blog" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors flex items-center gap-2">
-                        <ChevronLeft size={16} /> Back to Blog
+                    <Link href="/" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors flex items-center gap-2">
+                        <ChevronLeft size={16} /> Back to Home
                     </Link>
                 </div>
             </nav>
@@ -47,10 +47,10 @@ export default function BlogPost() {
                             <span className="text-neutral-500">•</span>
                             <span className="text-neutral-400">9 min read</span>
                             <span className="text-neutral-500">•</span>
-                            <span className="text-neutral-400">Published Feb 24, 2025</span>
+                            <span className="text-neutral-400">Published Feb 24, 2026</span>
                         </div>
                         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
-                            PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth Your Money in 2025?
+                            PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth Your Money in 2026?
                         </h1>
                     </header>
 
@@ -294,7 +294,7 @@ export default function BlogPost() {
                             <div>
                                 <h4 className="text-white font-bold mb-1 mt-0">Note on Roadmap Features</h4>
                                 <p className="text-neutral-300 text-sm m-0 leading-relaxed">
-                                    WordPress direct publish and content scheduling are confirmed on PekkerAI's roadmap for Q2–Q3 2025. If you're evaluating now, treat them as coming soon — not available today.
+                                    WordPress direct publish and content scheduling are confirmed on PekkerAI's roadmap for Q2–Q3 2026. If you're evaluating now, treat them as coming soon — not available today.
                                 </p>
                             </div>
                         </div>
@@ -315,7 +315,7 @@ export default function BlogPost() {
                             PekkerAI's 4-step pipeline (Input → Research → Review → Schedule) is deliberately minimal. Every step has one job. There are no mode switches, content type selectors, or output format options to navigate. For a founder producing 2–4 articles per week on top of running a product, the cognitive overhead of a simpler tool genuinely matters. Koala Writer has more options — which is a feature for power users and a source of friction for everyone else.
                         </p>
 
-                        <h3 className="text-xl font-bold text-white mt-8 mb-3">Complete scheduling pipeline (coming Q2–Q3 2025)</h3>
+                        <h3 className="text-xl font-bold text-white mt-8 mb-3">Complete scheduling pipeline (coming Q2–Q3 2026)</h3>
                         <p>
                             When PekkerAI's scheduling feature ships, it will be the only lean AI content tool offering a complete pipeline from keyword to scheduled, auto-published WordPress post. Koala Writer has WordPress publish today, but no scheduling. Once both are live in PekkerAI, the workflow advantage shifts significantly — especially for freelancers managing multiple client blogs on different publish cadences.
                         </p>
@@ -333,7 +333,7 @@ export default function BlogPost() {
 
                         <h3 className="text-xl font-bold text-white mt-8 mb-3">WordPress direct publish — available now</h3>
                         <p>
-                            Koala Writer can push articles directly to WordPress today. PekkerAI's WordPress integration is confirmed for Q2 2025 — which means there's a gap right now. If your workflow depends on direct-to-CMS publishing immediately, Koala Writer has the edge until PekkerAI ships its integration.
+                            Koala Writer can push articles directly to WordPress today. PekkerAI's WordPress integration is confirmed for Q2 2026 — which means there's a gap right now. If your workflow depends on direct-to-CMS publishing immediately, Koala Writer has the edge until PekkerAI ships its integration.
                         </p>
 
                         <h3 className="text-xl font-bold text-white mt-8 mb-3">Established community and track record</h3>
@@ -491,7 +491,7 @@ export default function BlogPost() {
                                     <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
                                 </summary>
                                 <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
-                                    WordPress direct publish is confirmed on PekkerAI's product roadmap for Q2 2025. It is not available today. Koala Writer currently offers WordPress direct publish. If this is a hard requirement for you right now, Koala Writer has the advantage.
+                                    WordPress direct publish is confirmed on PekkerAI's product roadmap for Q2 2026. It is not available today. Koala Writer currently offers WordPress direct publish. If this is a hard requirement for you right now, Koala Writer has the advantage.
                                 </div>
                             </details>
 
@@ -521,7 +521,7 @@ export default function BlogPost() {
                                     <span className="text-lime-400 font-light text-2xl group-open:rotate-45 transition-transform">+</span>
                                 </summary>
                                 <div className="px-5 pb-5 text-neutral-400 text-base leading-relaxed border-t border-white/5 pt-4">
-                                    No. Koala Writer offers WordPress direct publish but no content scheduling or auto-publish queue. PekkerAI's scheduling feature is planned for Q3 2025. Once live, it will be the only lean AI content tool offering keyword → generate → schedule → auto-publish in a single workflow.
+                                    No. Koala Writer offers WordPress direct publish but no content scheduling or auto-publish queue. PekkerAI's scheduling feature is planned for Q3 2026. Once live, it will be the only lean AI content tool offering keyword → generate → schedule → auto-publish in a single workflow.
                                 </div>
                             </details>
 

@@ -269,7 +269,7 @@ const AppDemoMockup = () => {
                       </div>
                       <div>
                         <div className="text-[10px] text-neutral-500 mb-1">Meta Title</div>
-                        <div className="px-2 py-1 bg-white/5 border border-white/5 rounded text-[10px] text-neutral-400 truncate">SaaS Billing Software: The Ultimate Guide (2025)</div>
+                        <div className="px-2 py-1 bg-white/5 border border-white/5 rounded text-[10px] text-neutral-400 truncate">SaaS Billing Software: The Ultimate Guide (2026)</div>
                       </div>
                       <div className="flex gap-2">
                         <button className="flex-1 py-1.5 bg-lime-400 text-black text-[10px] font-bold rounded-lg">Copy HTML</button>
@@ -850,7 +850,7 @@ export default function App() {
                 <FaqItem question="Can I cancel my subscription anytime?" answer="Absolutely. Cancel with one click from your dashboard. No hidden fees, no contracts. Your current plan will remain active until the end of your billing cycle." />
                 <FaqItem question="Do you offer a free trial?" answer="Because API costs are associated with every article generated, we do not offer a free trial. However, our $9 Starter plan is priced specifically so you can test the platform with minimal risk." />
                 <FaqItem question="What happens if I hit my monthly article limit?" answer="You can purchase additional article credits at any time from your dashboard, or upgrade your plan to get more monthly allowance. Unused articles do not roll over." />
-                <FaqItem question="Can I export directly to WordPress?" answer="Currently, we support HTML and Markdown export. WordPress integration via REST API is on our roadmap for Q2 2025. You can easily copy-paste the HTML into WordPress's editor right now." />
+                <FaqItem question="Can I export directly to WordPress?" answer="Currently, we support HTML and Markdown export. WordPress integration via REST API is on our roadmap for Q2 2026. You can easily copy-paste the HTML into WordPress's editor right now." />
               </div>
             </RevealOnScroll>
           </div>
@@ -898,33 +898,34 @@ export default function App() {
             <div>
               <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Product</h4>
               <ul className="space-y-3">
-                {['Features', 'Pricing', 'How it Works', 'Roadmap'].map(l => (
-                  <li key={l}><a href="#" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">{l}</a></li>
-                ))}
+                <li><a href="/#features" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Features</a></li>
+                <li><a href="/#pricing" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Pricing</a></li>
+                <li><a href="/#how-it-works" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">How it Works</a></li>
+                <li><a href="#" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Roadmap</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Company</h4>
               <ul className="space-y-3">
-                {['About', 'Blog', 'Careers', 'Contact'].map(l => (
-                  <li key={l}><a href="#" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">{l}</a></li>
-                ))}
+                <li><a href="/about" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">About</a></li>
+                <li><a href="/blog" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Blog</a></li>
+                <li><a href="/contact" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Contact</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Legal</h4>
               <ul className="space-y-3">
-                {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map(l => (
-                  <li key={l}><a href="#" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">{l}</a></li>
-                ))}
+                <li><a href="/privacy" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Terms of Service</a></li>
+                <li><a href="/cookie-policy" className="text-neutral-500 hover:text-lime-400 text-sm transition-colors">Cookie Policy</a></li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-neutral-600 text-sm">© 2025 PekkerAI. All rights reserved.</p>
+            <p className="text-neutral-600 text-sm">© 2026 PekkerAI. All rights reserved.</p>
             <div className="flex items-center gap-4">
               {['Twitter', 'LinkedIn', 'GitHub'].map(s => (
                 <a key={s} href="#" className="text-neutral-600 hover:text-lime-400 text-sm transition-colors">{s}</a>
