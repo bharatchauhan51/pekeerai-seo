@@ -303,12 +303,30 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isBannerVisible, setIsBannerVisible] = useState(true);
 
-  const handleWaitlistSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleWaitlistSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (email) {
-      setIsSubmitting(true);
-      setTimeout(() => { setIsSubmitting(false); setSubmitted(true); }, 1500);
+    if (!email) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: 'Waitlist',
+          price: '$0',
+          timestamp: new Date().toISOString(),
+          email: email,
+          tracking: { page_url: window.location.href }
+        }),
+      });
+      setSubmitted(true);
       setTimeout(() => { setIsModalOpen(false); setSubmitted(false); setEmail(''); }, 4500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
