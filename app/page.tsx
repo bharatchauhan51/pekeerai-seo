@@ -538,7 +538,7 @@ export default function App() {
 
             {/* Sub */}
             <p className="text-lg sm:text-xl text-neutral-400 mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
-              The ultra-lean AI content pipeline for founders and SEO freelancers. Go from a target keyword to a publish-ready, highly researched article for just $1.
+              The ultra-lean AI content pipeline. Go from target keyword to publish-ready article for just $1.
             </p>
 
             {/* CTAs */}
