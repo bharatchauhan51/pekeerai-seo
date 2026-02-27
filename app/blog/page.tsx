@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, ChevronLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
     title: 'SEO Blog & AI Content Resources | PekkerAI',
@@ -9,10 +9,17 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'pekkerai-vs-koala-writer',
+        title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth Your Money in 2026?',
+        description: "Comparing PekkerAI and Koala Writer on pricing, features, and results. One charges $1/article. One dominates the affiliate blogging niche.",
+        date: 'February 2026',
+        category: 'Comparison',
+    },
+    {
         slug: 'does-google-penalize-ai-generated-content',
-        title: 'Does Google Penalize AI-Generated Content? Here\'s the Real Answer (2025)',
+        title: 'Does Google Penalize AI-Generated Content? Here\'s the Real Answer (2026)',
         description: "Google doesn't penalize AI content — but it does penalize bad content. Learn exactly what triggers penalties and what Google rewards.",
-        date: 'February 2025',
+        date: 'February 2026',
         category: 'SEO Strategy',
     }
 ];
@@ -22,18 +29,15 @@ export default function BlogIndex() {
         <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-lime-400/20 selection:text-lime-300">
             {/* Navigation */}
             <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 rounded-lg">
                         <div className="w-9 h-9 bg-lime-400 rounded-lg flex items-center justify-center">
                             <Sparkles size={20} className="text-black" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight">PekkerAI</span>
+                        <span className="text-xl font-bold tracking-tight text-white">PekkerAI</span>
                     </Link>
-                    <div className="hidden md:flex items-center gap-8">
-                        <Link href="/#pricing" className="text-sm text-neutral-400 hover:text-white transition-colors">Pricing</Link>
-                    </div>
-                    <Link href="/#pricing" className="px-5 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-semibold text-sm rounded-full transition-all active:scale-95">
-                        Log In
+                    <Link href="/" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors flex items-center gap-2">
+                        <ChevronLeft size={16} /> Back to Home
                     </Link>
                 </div>
             </nav>
