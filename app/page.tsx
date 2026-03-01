@@ -948,9 +948,8 @@ export default function App() {
           <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-neutral-600 text-sm">© 2026 PekkerAI. All rights reserved.</p>
             <div className="flex items-center gap-4">
-              {['Twitter', 'LinkedIn', 'GitHub'].map(s => (
-                <a key={s} href="#" className="text-neutral-600 hover:text-lime-400 text-sm transition-colors">{s}</a>
-              ))}
+              <a href="https://x.com/PekkerAISEO" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-lime-400 text-sm transition-colors">Twitter</a>
+              <a href="https://www.instagram.com/pekkeraiseo/" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-lime-400 text-sm transition-colors">Instagram</a>
             </div>
           </div>
         </div>

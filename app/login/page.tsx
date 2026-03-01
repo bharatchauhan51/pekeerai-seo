@@ -29,12 +29,12 @@ export default function LoginPage() {
             return;
         }
         setIsLoading(true);
-        const success = await login(email, password);
+        const result = await login(email, password);
         setIsLoading(false);
-        if (success) {
+        if (result.success) {
             router.push('/dashboard');
         } else {
-            setError('Invalid credentials. Please try again.');
+            setError(result.error || 'Invalid credentials. Please try again.');
         }
     };
 
@@ -128,16 +128,13 @@ export default function LoginPage() {
                             )}
                         </button>
 
-                        {/* Demo hint */}
-                        <p className="text-xs text-neutral-500 text-center pt-2">
-                            Demo mode: Enter any email and password to log in.
-                        </p>
+
                     </form>
 
                     <p className="text-center text-sm text-neutral-500 mt-6">
-                        Don't have an account?{' '}
-                        <Link href="/" className="text-lime-400 hover:text-lime-300 font-semibold transition-colors">
-                            Sign up for early access
+                        Don&apos;t have an account?{' '}
+                        <Link href="/signup" className="text-lime-400 hover:text-lime-300 font-semibold transition-colors">
+                            Create an account
                         </Link>
                     </p>
                 </div>
