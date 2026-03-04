@@ -48,6 +48,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.8,
         },
         {
+            url: `${baseUrl}/blog/surfer-seo-alternatives`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/blog/pekkerai-vs-koala-writer`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
+        {
             url: `${baseUrl}/signup`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
@@ -58,12 +70,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             lastModified: new Date(),
             changeFrequency: 'monthly',
             priority: 0.6,
-        },
-        {
-            url: `${baseUrl}/blog/pekkerai-vs-koala-writer`,
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.8,
         }
     ];
 }

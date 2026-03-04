@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'surfer-seo-alternatives',
+        title: 'Surfer SEO Alternatives That Are 10x Cheaper in 2026',
+        description: "Surfer SEO costs $89/mo. These 5 alternatives start at $9 — and some produce better SEO content. Full comparison with pricing, pros/cons, and recommendations.",
+        date: 'March 2026',
+        category: 'Comparison',
+    },
+    {
         slug: 'pekkerai-vs-koala-writer',
         title: 'PekkerAI vs Koala Writer: Which AI SEO Tool Is Worth Your Money in 2026?',
         description: "Comparing PekkerAI and Koala Writer on pricing, features, and results. One charges $1/article. One dominates the affiliate blogging niche.",
