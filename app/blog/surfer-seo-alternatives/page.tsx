@@ -22,6 +22,97 @@ export const metadata: Metadata = {
 export default function BlogPost() {
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-neutral-300 font-sans selection:bg-lime-400/20 selection:text-lime-300">
+            {/* JSON-LD Article Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Article",
+                        "headline": "Surfer SEO Alternatives That Are 10x Cheaper in 2026",
+                        "description": "Surfer SEO costs $89/mo. These 5 alternatives start at $9 — with better per-article economics. Full comparison with pricing, pros, cons, and honest recommendations.",
+                        "image": "https://pekkerai.com/og-image.png",
+                        "author": {
+                            "@type": "Person",
+                            "name": "Bharat Chauhan",
+                            "jobTitle": "Founder",
+                            "worksFor": {
+                                "@type": "Organization",
+                                "name": "PekkerAI",
+                                "url": "https://pekkerai.com"
+                            }
+                        },
+                        "publisher": {
+                            "@type": "Organization",
+                            "name": "PekkerAI",
+                            "url": "https://pekkerai.com",
+                            "logo": {
+                                "@type": "ImageObject",
+                                "url": "https://pekkerai.com/icon.png"
+                            }
+                        },
+                        "datePublished": "2026-03-04",
+                        "dateModified": "2026-03-04",
+                        "mainEntityOfPage": {
+                            "@type": "WebPage",
+                            "@id": "https://pekkerai.com/blog/surfer-seo-alternatives"
+                        },
+                        "keywords": ["surfer seo alternatives", "surfer seo alternative", "cheaper than surfer seo", "ai seo tools", "neuronwriter vs surfer seo"]
+                    })
+                }}
+            />
+            {/* JSON-LD FAQPage Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "FAQPage",
+                        "mainEntity": [
+                            {
+                                "@type": "Question",
+                                "name": "What is the cheapest Surfer SEO alternative?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "PekkerAI is the cheapest on a per-article basis at $0.49/article on the Agency plan ($49/mo for 100 articles). Both PekkerAI and Koala Writer start at $9/month — 10x less than Surfer SEO's $89/month entry point. NeuronWriter starts at $23/month, still roughly 75% cheaper than Surfer."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "Is NeuronWriter as good as Surfer SEO?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "For on-page content optimization, NeuronWriter provides very similar functionality to Surfer SEO — NLP-based scoring, SERP competitor analysis, and content editor with real-time recommendations. However, Surfer SEO has deeper integrations (Jasper, Google Docs) and a larger dataset. For most users, the difference doesn't justify the 4x price difference."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "Can AI SEO tools replace Surfer SEO completely?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "Yes, for most use cases. Tools like PekkerAI and Koala Writer now include SERP analysis, content optimization scoring, and full article generation — meaning they cover both the 'optimize' and 'create' steps that Surfer SEO only covers one of. The exception is enterprise teams that need Surfer's Grow Flow automation and multi-editor collaboration features."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "Does Frase write full articles?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "Frase has an AI writing add-on ($35/month extra) that can generate article sections, but it's primarily a research and brief generation tool. For full end-to-end article production from a single keyword, PekkerAI or Koala Writer are better suited. Frase is best used for the research and planning phase, then paired with a production tool."
+                                }
+                            },
+                            {
+                                "@type": "Question",
+                                "name": "Which Surfer SEO alternative is best for freelancers?",
+                                "acceptedAnswer": {
+                                    "@type": "Answer",
+                                    "text": "PekkerAI is designed specifically for SEO freelancers. The Agency plan ($49/mo, 100 articles) includes competitor URL analysis and per-article pricing — meaning you know your exact cost per deliverable. For freelancers who bill clients per article, this unit economics clarity is a significant workflow advantage over word-count or credit-based pricing models."
+                                }
+                            }
+                        ]
+                    })
+                }}
+            />
             {/* Navigation */}
             <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0 z-50">
                 <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
