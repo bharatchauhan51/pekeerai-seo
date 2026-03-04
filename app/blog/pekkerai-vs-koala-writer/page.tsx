@@ -132,7 +132,7 @@ export default function BlogPost() {
 
                         <h2 id="pricing" className="text-2xl font-bold text-white mt-12 mb-6">2. Pricing Breakdown: What You Actually Pay Per Article</h2>
                         <p>
-                            Pricing is where the comparison gets interesting — and where most reviews get it wrong. Both tools start at $9/month, so it looks like a draw. But Koala Writer prices by word count, not article count. PekkerAI prices by article. For a founder who thinks in deliverables — not words — that distinction changes the mental math completely.
+                            Pricing is where the comparison gets interesting — and where most reviews get it wrong. Both tools start at $9/month, so it looks like a draw. But Koala Writer prices by word count, not article count. PekkerAI prices by article. For a founder who thinks in deliverables — not words — that distinction changes the mental math completely. Both are dramatically cheaper than enterprise tools like Surfer SEO — if you&apos;re evaluating the broader landscape, see our full breakdown of <Link href="/blog/surfer-seo-alternatives" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">Surfer SEO alternatives that cost 10x less</Link>.
                         </p>
 
                         <div className="overflow-x-auto my-8">
