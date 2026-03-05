@@ -84,7 +84,7 @@ export const articleApi = {
             body: JSON.stringify(data),
         }),
 
-    generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string }) =>
+    generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; articleId?: string }) =>
         apiFetch<GenerateResponse>('/api/articles/generate', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -119,6 +119,9 @@ export const articleApi = {
 
     calendar: (month: string) =>
         apiFetch<CalendarResponse>(`/api/articles/calendar?month=${month}`),
+
+    getById: (articleId: string | number) =>
+        apiFetch<ArticleDetail>(`/api/articles/${articleId}`),
 };
 
 // ─── Dashboard APIs ───
@@ -202,6 +205,7 @@ export interface SeoScoreMetrics {
 }
 
 export interface AnalyzeResponse {
+    articleId?: string;
     serpResults: SerpResult[];
     outline: OutlineItem[];
     meta: ArticleMeta;
@@ -249,6 +253,20 @@ export interface CalendarEvent {
 export interface CalendarResponse {
     month: string;
     events: CalendarEvent[];
+}
+
+export interface ArticleDetail {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    html: string;
+    meta: ArticleMeta;
+    faqs: FaqItem[];
+    seoScore: { overall: number; metrics: SeoScoreMetrics };
+    stats: { wordCount: number; readTime: string };
+    publishedAt?: string;
+    keyword?: string;
 }
 
 export interface DashboardStats {

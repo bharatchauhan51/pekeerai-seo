@@ -1,23 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Sparkles, Search, FileText, Calendar, ChevronRight, ChevronLeft, Check, ArrowRight,
     Globe, Mic2, BarChart3, ExternalLink, GripVertical, Clock, Tag, Zap,
-    Bold, Italic, List, Link2, Image, AlignLeft, Heading2, Quote, Code,
+    Bold, Italic, List, Link2, Image, AlignLeft, Heading1, Heading2, Quote, Code, Undo2, Redo2,
     ChevronDown, X, CalendarDays, LogOut, Loader2, Download, Menu,
     SendHorizontal, Bot, MessageSquare, CornerDownLeft, Save
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
     articleApi,
-    SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent
+    SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail
 } from '../../lib/api';
 
 // ─── Shared Types for inter-step data ───
 interface AnalysisData {
+    articleId?: string;
     serpResults: SerpResult[];
     outline: OutlineItem[];
     meta: ArticleMeta;
@@ -33,7 +34,7 @@ interface GenerationData {
 }
 
 // ─── Step Progress Bar ───
-function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onStepClick: (s: number) => void }) {
+function StepIndicator({ currentStep, onStepClick, lockedSteps = [] }: { currentStep: number; onStepClick: (s: number) => void; lockedSteps?: number[] }) {
     const steps = [
         { num: 1, label: 'Input & Setup', icon: Search },
         { num: 2, label: 'Research & Structure', icon: FileText },
@@ -45,27 +46,31 @@ function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onSt
             {steps.map((step, i) => {
                 const isActive = currentStep === step.num;
                 const isCompleted = currentStep > step.num;
+                const isLocked = lockedSteps.includes(step.num);
                 return (
                     <div key={step.num} className="flex items-center flex-1 last:flex-initial">
                         <button
-                            onClick={() => onStepClick(step.num)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 ${isActive ? 'bg-lime-400/15 border border-lime-400/30 text-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.08)]' :
-                                isCompleted ? 'bg-white/5 border border-white/10 text-lime-400' :
-                                    'bg-transparent border border-white/5 text-neutral-500 hover:border-white/15 hover:text-neutral-400'
+                            onClick={() => !isLocked && onStepClick(step.num)}
+                            disabled={isLocked}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 ${isLocked ? 'bg-transparent border border-white/5 text-neutral-600 cursor-not-allowed opacity-40' :
+                                isActive ? 'bg-lime-400/15 border border-lime-400/30 text-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.08)]' :
+                                    isCompleted ? 'bg-white/5 border border-white/10 text-lime-400' :
+                                        'bg-transparent border border-white/5 text-neutral-500 hover:border-white/15 hover:text-neutral-400'
                                 }`}
                             aria-current={isActive ? 'step' : undefined}
                         >
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${isActive ? 'bg-lime-400 text-black' : isCompleted ? 'bg-lime-400/20 text-lime-400' : 'bg-white/5 text-neutral-500'
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${isLocked ? 'bg-white/5 text-neutral-600' :
+                                isActive ? 'bg-lime-400 text-black' : isCompleted ? 'bg-lime-400/20 text-lime-400' : 'bg-white/5 text-neutral-500'
                                 }`}>
-                                {isCompleted ? <Check size={16} /> : step.num}
+                                {isCompleted && !isLocked ? <Check size={16} /> : step.num}
                             </div>
                             <div className="hidden lg:block text-left">
-                                <div className={`text-xs font-bold uppercase tracking-widest ${isActive ? 'text-lime-400' : 'text-neutral-500'}`}>Step {step.num}</div>
+                                <div className={`text-xs font-bold uppercase tracking-widest ${isLocked ? 'text-neutral-600' : isActive ? 'text-lime-400' : 'text-neutral-500'}`}>Step {step.num}</div>
                                 <div className="text-sm font-semibold whitespace-nowrap">{step.label}</div>
                             </div>
                         </button>
                         {i < steps.length - 1 && (
-                            <div className={`hidden md:block flex-1 h-px mx-3 transition-colors ${isCompleted ? 'bg-lime-400/40' : 'bg-white/5'}`} />
+                            <div className={`hidden md:block flex-1 h-px mx-3 transition-colors ${isCompleted && !isLocked ? 'bg-lime-400/40' : 'bg-white/5'}`} />
                         )}
                     </div>
                 );
@@ -167,6 +172,7 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, onGenerationCompl
             meta: analysis.meta,
             tone,
             pointOfView: pov,
+            ...(analysis.articleId ? { articleId: analysis.articleId } : {}),
         });
 
         setIsGenerating(false);
@@ -259,12 +265,28 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
     const [isSaved, setIsSaved] = useState(false);
     const [currentHtml, setCurrentHtml] = useState(generation?.html || '');
     const [seoScore, setSeoScore] = useState(generation?.seoScore || { overall: 0, metrics: {} as SeoScoreMetrics });
+
+    // Dynamic Stats
+    const wordCount = currentHtml ? currentHtml.replace(/<[^>]*>?/gm, ' ').trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+    const readTime = Math.max(1, Math.ceil(wordCount / 200)) + ' min read';
+
     const chatEndRef = { current: null as HTMLDivElement | null };
+    const editorRef = { current: null as HTMLDivElement | null };
+    const isInitialized = { current: false };
+
+    const [linkPrompt, setLinkPrompt] = useState<{ isOpen: boolean; range: Range | null }>({ isOpen: false, range: null });
+    const [imagePrompt, setImagePrompt] = useState<{ isOpen: boolean; range: Range | null }>({ isOpen: false, range: null });
+    const [popupUrl, setPopupUrl] = useState('');
 
     useEffect(() => {
         if (generation) {
             setCurrentHtml(generation.html);
             setSeoScore(generation.seoScore);
+            // Only manually set innerHTML on first load to avoid destroying browser native undo/redo history stack
+            if (editorRef.current && generation.html && !isInitialized.current) {
+                editorRef.current.innerHTML = generation.html;
+                isInitialized.current = true;
+            }
         }
     }, [generation]);
 
@@ -366,32 +388,170 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
             </div>
             <div className="grid lg:grid-cols-3 gap-6">
                 {/* Article Editor */}
-                <div className="lg:col-span-2 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
-                    <div className="flex items-center gap-1 px-4 py-3 border-b border-white/10 bg-white/[0.02] flex-wrap">
-                        {[Bold, Italic, Heading2, List, Quote, Code, Link2, Image, AlignLeft].map((Icon, i) => (
-                            <button key={i} className="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-colors"><Icon size={16} /></button>
-                        ))}
-                        <div className="w-px h-5 bg-white/10 mx-1" />
-                        <button onClick={handleDownloadHTML} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-neutral-500 hover:text-lime-400 hover:bg-lime-400/10 transition-colors text-xs font-semibold" title="Download as HTML">
-                            <Download size={14} /> HTML
-                        </button>
-                        <div className="flex-1" />
-                        <div className="flex items-center gap-2 text-xs text-neutral-500"><Clock size={12} /> {generation.stats.readTime} · {generation.stats.wordCount} words</div>
-                    </div>
-                    <div
-                        className="p-6 sm:p-8 overflow-y-auto article-preview"
-                        dangerouslySetInnerHTML={{ __html: currentHtml }}
-                    />
-                    <style>{`
+                <div className="lg:col-span-2 relative min-h-[600px]">
+                    <div className="absolute inset-0 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
+                        <div className="flex items-center gap-1 px-4 py-3 border-b border-white/10 bg-white/[0.02] flex-wrap shrink-0">
+                            {[
+                                { icon: Bold, title: 'Bold', action: () => document.execCommand('bold') },
+                                { icon: Italic, title: 'Italic', action: () => document.execCommand('italic') },
+                                { icon: Heading1, title: 'Heading 1', action: () => document.execCommand('formatBlock', false, 'H1') },
+                                { icon: Heading2, title: 'Heading 2', action: () => document.execCommand('formatBlock', false, 'H2') },
+                                { icon: List, title: 'Bullet List', action: () => document.execCommand('insertUnorderedList') },
+                                {
+                                    icon: Code, title: 'Code', action: () => {
+                                        const sel = window.getSelection();
+                                        if (sel) {
+                                            const text = sel.toString() || 'code';
+                                            document.execCommand('insertHTML', false, `<code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.85em;">${text}</code>`);
+                                        }
+                                    }
+                                },
+                                { icon: AlignLeft, title: 'Align Left', action: () => document.execCommand('justifyLeft') },
+                            ].map((btn, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    title={btn.title}
+                                    onClick={(e) => e.preventDefault()}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        btn.action();
+                                        if (editorRef.current) {
+                                            const newHtml = editorRef.current.innerHTML;
+                                            setCurrentHtml(newHtml);
+                                            onHtmlUpdate(newHtml);
+                                        }
+                                    }}
+                                    className="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                    <btn.icon size={16} />
+                                </button>
+                            ))}
+                            <div className="w-px h-5 bg-white/10 mx-1" />
+                            {[
+                                { icon: Undo2, title: 'Undo (Ctrl+Z)', action: () => document.execCommand('undo') },
+                                { icon: Redo2, title: 'Redo (Ctrl+Y)', action: () => document.execCommand('redo') },
+                            ].map((btn, i) => (
+                                <button
+                                    key={`ur-${i}`}
+                                    type="button"
+                                    title={btn.title}
+                                    onClick={(e) => e.preventDefault()}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        btn.action();
+                                        if (editorRef.current) {
+                                            const newHtml = editorRef.current.innerHTML;
+                                            setCurrentHtml(newHtml);
+                                            onHtmlUpdate(newHtml);
+                                        }
+                                    }}
+                                    className="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                    <btn.icon size={16} />
+                                </button>
+                            ))}
+                            <div className="w-px h-5 bg-white/10 mx-1" />
+                            <button onClick={handleDownloadHTML} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-neutral-500 hover:text-lime-400 hover:bg-lime-400/10 transition-colors text-xs font-semibold" title="Download as HTML">
+                                <Download size={14} /> HTML
+                            </button>
+                            <div className="flex-1" />
+                            <div className="flex items-center gap-2 text-xs text-neutral-500"><Clock size={12} /> {readTime} · {wordCount} words</div>
+                        </div>
+
+                        {(linkPrompt.isOpen || imagePrompt.isOpen) && (
+                            <div className="absolute inset-x-0 top-14 mx-4 p-4 rounded-xl bg-black border border-white/20 shadow-2xl z-10 flex items-center gap-3">
+                                <span className="text-white text-sm font-semibold">{linkPrompt.isOpen ? 'Insert Link' : 'Insert Image'}</span>
+                                <input
+                                    autoFocus
+                                    type="url"
+                                    placeholder="https://"
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-lg text-white text-sm px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-lime-400/40"
+                                    value={popupUrl}
+                                    onChange={(e) => setPopupUrl(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            const promptState = linkPrompt.isOpen ? linkPrompt : imagePrompt;
+                                            const command = linkPrompt.isOpen ? 'createLink' : 'insertImage';
+
+                                            if (popupUrl) {
+                                                if (editorRef.current) {
+                                                    editorRef.current.focus();
+                                                }
+                                                const sel = window.getSelection();
+                                                if (sel && promptState.range) {
+                                                    sel.removeAllRanges();
+                                                    sel.addRange(promptState.range);
+
+                                                    if (command === 'createLink') {
+                                                        const textContent = promptState.range.toString();
+                                                        if (!textContent) {
+                                                            document.execCommand('insertHTML', false, `<a target="_blank" href="${popupUrl}">${popupUrl}</a>`);
+                                                        } else {
+                                                            const fragment = promptState.range.cloneContents();
+                                                            const div = document.createElement('div');
+                                                            div.appendChild(fragment);
+                                                            const htmlContent = div.innerHTML || textContent;
+                                                            document.execCommand('insertHTML', false, `<a target="_blank" href="${popupUrl}">${htmlContent}</a>`);
+                                                        }
+                                                    } else {
+                                                        document.execCommand(command, false, popupUrl);
+                                                    }
+                                                }
+                                            }
+
+                                            if (editorRef.current) {
+                                                const newHtml = editorRef.current.innerHTML;
+                                                setCurrentHtml(newHtml);
+                                                onHtmlUpdate(newHtml);
+                                            }
+
+                                            setLinkPrompt({ isOpen: false, range: null });
+                                            setImagePrompt({ isOpen: false, range: null });
+                                        } else if (e.key === 'Escape') {
+                                            setLinkPrompt({ isOpen: false, range: null });
+                                            setImagePrompt({ isOpen: false, range: null });
+                                        }
+                                    }}
+                                />
+                                <button
+                                    onClick={() => {
+                                        setLinkPrompt({ isOpen: false, range: null });
+                                        setImagePrompt({ isOpen: false, range: null });
+                                    }}
+                                    className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-neutral-400 transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
+
+                        <div
+                            ref={(el) => { editorRef.current = el; }}
+                            className="flex-1 overflow-y-auto p-6 sm:p-8 article-preview focus:outline-none"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                                const newHtml = e.currentTarget.innerHTML;
+                                setCurrentHtml(newHtml);
+                                onHtmlUpdate(newHtml);
+                            }}
+                        />
+                        <style>{`
+                        .article-preview h1 { font-size: 1.8em; font-weight: 800; color: #ffffff; margin-top: 1.5em; margin-bottom: 0.8em; }
+                        .article-preview h1:first-child { margin-top: 0; }
                         .article-preview h2 { font-size: 1.4em; font-weight: 700; color: #a3e635; margin-top: 1.8em; margin-bottom: 0.6em; padding-bottom: 0.4em; border-bottom: 1px solid rgba(255,255,255,0.08); }
                         .article-preview h2:first-child { margin-top: 0; }
                         .article-preview h3 { font-size: 1.15em; font-weight: 600; color: #e5e5e5; margin-top: 1.4em; margin-bottom: 0.4em; }
                         .article-preview p { color: #a3a3a3; line-height: 1.75; margin: 0.8em 0; font-size: 0.875rem; }
+                        .article-preview a { color: #a3e635; text-decoration: underline; text-underline-offset: 4px; font-weight: 500; transition: color 0.2s; }
+                        .article-preview a:hover { color: #84cc16; }
                         .article-preview strong { color: #ffffff; font-weight: 600; }
                         .article-preview ul { list-style: none; padding: 0; margin: 0.8em 0; }
                         .article-preview ul li { position: relative; padding-left: 1.4em; color: #a3a3a3; font-size: 0.875rem; line-height: 1.75; margin: 0.35em 0; }
                         .article-preview ul li::before { content: ''; position: absolute; left: 0; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: #a3e635; }
                     `}</style>
+                    </div>
                 </div>
 
                 {/* Right Sidebar */}
@@ -514,7 +674,7 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
                     {generation.faqs.length > 0 && (
                         <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
                             <h3 className="flex items-center gap-2 text-sm font-bold text-white mb-3"><Tag size={14} className="text-lime-400" /> Auto-Generated FAQs <span className="text-[10px] font-medium text-neutral-500 bg-white/5 px-2 py-0.5 rounded-full ml-auto">{generation.faqs.length} questions</span></h3>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                                 {generation.faqs.map((faq, i) => (
                                     <details key={i} className="group">
                                         <summary className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-neutral-300 hover:text-lime-400 transition-colors list-none py-1.5">
@@ -527,8 +687,8 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 
@@ -696,11 +856,14 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
 }
 
 // ─── Main Page ───
-export default function NewArticlePage() {
+function NewArticlePageInner() {
     const { user, isLoggedIn, isLoading, logout } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [currentStep, setCurrentStep] = useState(1);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [articleLoading, setArticleLoading] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
 
     // Shared state between steps
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
@@ -715,7 +878,43 @@ export default function NewArticlePage() {
         }
     }, [isLoggedIn, isLoading, router]);
 
-    if (isLoading || !isLoggedIn) {
+    // Load existing article if articleId is in URL
+    useEffect(() => {
+        const articleId = searchParams.get('articleId');
+        if (!articleId || !isLoggedIn) return;
+
+        const loadArticle = async () => {
+            setArticleLoading(true);
+            const { data, error } = await articleApi.getById(articleId);
+            setArticleLoading(false);
+
+            if (data && !error) {
+                // Handle both { article: {...} } and direct { id, html, ... } response formats
+                const article = (data as any).article || data;
+                setKeyword(article.keyword || article.title || '');
+                setAnalysisData({
+                    articleId: String(article.id),
+                    serpResults: [],
+                    outline: [],
+                    meta: article.meta || { title: article.title, description: '' },
+                    recommendations: { targetWordCount: '', targetHeadings: '' },
+                });
+                setGenerationData({
+                    articleId: String(article.id),
+                    html: article.htmlContent || article.html || '',
+                    faqs: article.faqs || [],
+                    seoScore: article.seoScore || article.seo_score || { overall: 0, metrics: {} as SeoScoreMetrics },
+                    stats: article.stats || { wordCount: 0, readTime: '0 min' },
+                });
+                setIsEditMode(true);
+                setCurrentStep(3);
+            }
+        };
+
+        loadArticle();
+    }, [searchParams, isLoggedIn]);
+
+    if (isLoading || !isLoggedIn || articleLoading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
                 <Loader2 className="animate-spin text-lime-400" size={32} />
@@ -777,7 +976,7 @@ export default function NewArticlePage() {
 
             {/* Main Content */}
             <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-24">
-                <StepIndicator currentStep={currentStep} onStepClick={setCurrentStep} />
+                <StepIndicator currentStep={currentStep} onStepClick={setCurrentStep} lockedSteps={isEditMode ? [1, 2] : []} />
                 {currentStep === 1 && (
                     <Step1
                         onNext={() => setCurrentStep(2)}
@@ -803,7 +1002,7 @@ export default function NewArticlePage() {
                 {currentStep === 3 && (
                     <Step3
                         onNext={() => setCurrentStep(4)}
-                        onBack={() => setCurrentStep(2)}
+                        onBack={isEditMode ? () => router.push('/dashboard') : () => setCurrentStep(2)}
                         generation={generationData}
                         onHtmlUpdate={(html) => setGenerationData(prev => prev ? { ...prev, html } : prev)}
                         keyword={keyword}
@@ -818,5 +1017,17 @@ export default function NewArticlePage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function NewArticlePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+                <Loader2 className="animate-spin text-lime-400" size={32} />
+            </div>
+        }>
+            <NewArticlePageInner />
+        </Suspense>
     );
 }

@@ -175,14 +175,14 @@ export default function DashboardPage() {
                                             No articles yet. <Link href="/dashboard/new" className="text-lime-400 hover:text-lime-300">Create your first article</Link>.
                                         </div>
                                     ) : articles.map((article) => (
-                                        <div key={article.id} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors group">
+                                        <Link key={article.id} href={`/dashboard/new?articleId=${article.id}`} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors group cursor-pointer no-underline">
                                             <div className={`w-1.5 h-10 rounded-full shrink-0 ${article.status === 'published' ? 'bg-lime-400' :
                                                 article.status === 'scheduled' ? 'bg-blue-400' : 'bg-neutral-600'
                                                 }`} />
                                             <div className="flex-1 min-w-0">
-                                                <Link href={article.slug || '#'} className="text-sm font-semibold text-white truncate block group-hover:text-lime-400 transition-colors">
+                                                <span className="text-sm font-semibold text-white truncate block group-hover:text-lime-400 transition-colors">
                                                     {article.title}
-                                                </Link>
+                                                </span>
                                                 <div className="flex items-center gap-3 text-xs text-neutral-500 mt-1">
                                                     <span className="flex items-center gap-1"><Calendar size={11} /> {article.publishedAt}</span>
                                                     <span className="flex items-center gap-1"><Eye size={11} /> {article.views || '—'}</span>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
                                                 }`}>
                                                 {article.seoScore}
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))}
                                 </div>
                             </div>
