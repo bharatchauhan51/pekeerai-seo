@@ -12,8 +12,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
-    articleApi,
-    SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail
+    articleApi, billingApi,
+    SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail,
+    SubscriptionResponse, PlanItem
 } from '../../lib/api';
 
 // ─── Shared Types for inter-step data ───
@@ -80,7 +81,11 @@ function StepIndicator({ currentStep, onStepClick, lockedSteps = [] }: { current
 }
 
 // ─── Step 1: Keyword Input ───
-function Step1({ onNext, onAnalysisComplete }: { onNext: () => void; onAnalysisComplete: (data: AnalysisData, keyword: string, tone: string, pov: string) => void }) {
+function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
+    onNext: () => void;
+    onAnalysisComplete: (data: AnalysisData, keyword: string, tone: string, pov: string) => void;
+    onLimitReached: () => void;
+}) {
     const [keyword, setKeyword] = useState('');
     const [tone, setTone] = useState('Professional & Direct');
     const [pov, setPov] = useState('Second Person (You/Your)');
@@ -94,6 +99,14 @@ function Step1({ onNext, onAnalysisComplete }: { onNext: () => void; onAnalysisC
         }
         setError('');
         setIsAnalyzing(true);
+
+        // Check subscription limit before analyzing
+        const { data: sub } = await billingApi.subscription();
+        if (sub && sub.articlesLimit !== -1 && sub.articlesUsed >= sub.articlesLimit) {
+            setIsAnalyzing(false);
+            onLimitReached();
+            return;
+        }
 
         const { data, error: apiError } = await articleApi.analyze({
             keyword: keyword.trim(),
@@ -857,7 +870,7 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
 
 // ─── Main Page ───
 function NewArticlePageInner() {
-    const { user, isLoggedIn, isLoading, logout } = useAuth();
+    const { user, isLoggedIn, isLoading, logout, refreshUser } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const [currentStep, setCurrentStep] = useState(1);
@@ -872,11 +885,47 @@ function NewArticlePageInner() {
     const [tone, setTone] = useState('');
     const [pov, setPov] = useState('');
 
+    // Subscription & Modal states
+    const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
+    const [plans, setPlans] = useState<PlanItem[]>([]);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [isChangingPlan, setIsChangingPlan] = useState(false);
+
     useEffect(() => {
         if (!isLoading && !isLoggedIn) {
             router.push('/login');
         }
     }, [isLoggedIn, isLoading, router]);
+
+    // Fetch billing data
+    useEffect(() => {
+        if (!isLoggedIn) return;
+        const fetchData = async () => {
+            const [subRes, plansRes] = await Promise.all([
+                billingApi.subscription(),
+                billingApi.plans()
+            ]);
+            if (subRes.data) setSubscription(subRes.data);
+            if (plansRes.data) setPlans(plansRes.data.plans);
+        };
+        fetchData();
+    }, [isLoggedIn]);
+
+    const handleChangePlan = async (planId: string) => {
+        setIsChangingPlan(true);
+        const { data, error } = await billingApi.changePlan(planId);
+        setIsChangingPlan(false);
+        if (!error && data) {
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
+            const subRes = await billingApi.subscription();
+            if (subRes.data) setSubscription(subRes.data);
+            setShowUpgradeModal(false);
+            await refreshUser();
+        }
+    };
 
     // Load existing article if articleId is in URL
     useEffect(() => {
@@ -980,6 +1029,7 @@ function NewArticlePageInner() {
                 {currentStep === 1 && (
                     <Step1
                         onNext={() => setCurrentStep(2)}
+                        onLimitReached={() => setShowUpgradeModal(true)}
                         onAnalysisComplete={(data, kw, t, p) => {
                             setAnalysisData(data);
                             setKeyword(kw);
@@ -1016,6 +1066,79 @@ function NewArticlePageInner() {
                     />
                 )}
             </main>
+
+            {/* ─── Upgrade Plan Modal ─── */}
+            {showUpgradeModal && subscription && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={() => setShowUpgradeModal(false)}>
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-4xl w-full shadow-2xl overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white mb-1">Upgrade Your Plan</h3>
+                                <p className="text-sm text-neutral-400">You&apos;ve reached your monthly article limit. Upgrade to continue creating.</p>
+                            </div>
+                            <button onClick={() => setShowUpgradeModal(false)} className="p-2 rounded-lg hover:bg-white/5 text-neutral-400 transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {plans.map((plan) => {
+                                const isCurrent = plan.name === subscription.plan;
+                                const isUpgrade = plan.price > subscription.price;
+                                return (
+                                    <div
+                                        key={plan.id}
+                                        className={`relative bg-white/[0.03] border rounded-2xl p-6 transition-all duration-300 ${isCurrent
+                                            ? 'border-lime-400/40 ring-1 ring-lime-400/20 shadow-[0_0_30px_rgba(163,230,53,0.06)]'
+                                            : 'border-white/10 hover:border-white/20'
+                                            }`}
+                                    >
+                                        {isCurrent && (
+                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-lime-400 text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                                                Current Plan
+                                            </div>
+                                        )}
+                                        <div className="mb-4">
+                                            <div className="text-lg font-bold text-white">{plan.name}</div>
+                                            <div className="flex items-baseline gap-1 mt-1">
+                                                <span className="text-3xl font-bold text-white">${plan.price}</span>
+                                                <span className="text-neutral-500 text-sm">/{plan.interval}</span>
+                                            </div>
+                                            <div className="text-xs text-neutral-500 mt-2">
+                                                {plan.articlesPerMonth === -1 ? 'Unlimited articles' : `${plan.articlesPerMonth} articles / month`}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3 mb-8">
+                                            {plan.features.map((feature, i) => (
+                                                <div key={i} className="flex items-center gap-2 text-xs text-neutral-400">
+                                                    <Check size={14} className="text-lime-400" />
+                                                    {feature}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {isCurrent ? (
+                                            <div className="w-full py-3 text-center text-sm font-semibold text-lime-400 bg-lime-400/10 rounded-full">
+                                                Active
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleChangePlan(plan.id)}
+                                                disabled={isChangingPlan}
+                                                className={`w-full py-3 text-center text-sm font-bold rounded-full transition-all active:scale-95 ${isUpgrade
+                                                    ? 'bg-lime-400 hover:bg-lime-300 text-black'
+                                                    : 'border border-white/10 text-neutral-400 hover:text-white hover:border-white/20'
+                                                    }`}
+                                            >
+                                                {isChangingPlan ? <Loader2 size={18} className="animate-spin mx-auto" /> : isUpgrade ? 'Upgrade Now' : 'Downgrade'}
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

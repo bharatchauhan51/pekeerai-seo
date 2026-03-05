@@ -145,7 +145,7 @@ export const billingApi = {
         apiFetch<PlansResponse>('/api/billing/plans'),
 
     changePlan: (newPlanId: string) =>
-        apiFetch<{ subscription: { plan: string; price: number; effectiveDate: string; proratedCharge: number } }>('/api/billing/change-plan', {
+        apiFetch<{ checkoutUrl?: string; subscription: { plan: string; price: number; effectiveDate: string; proratedCharge: number } }>('/api/billing/change-plan', {
             method: 'POST',
             body: JSON.stringify({ newPlanId }),
         }),

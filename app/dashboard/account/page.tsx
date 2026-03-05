@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Sparkles, LogOut, ChevronRight, Check, X, Loader2,
@@ -14,7 +14,9 @@ import {
     SubscriptionResponse, PlanItem, InvoiceItem
 } from '../../lib/api';
 
-export default function AccountPage() {
+function AccountPageInner() {
+    const searchParams = useSearchParams();
+    const [showSuccessNotification, setShowSuccessNotification] = useState(false);
     const { user, isLoggedIn, isLoading, logout, refreshUser } = useAuth();
     const router = useRouter();
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -75,6 +77,16 @@ export default function AccountPage() {
         }
     }, [isLoggedIn, user]);
 
+    useEffect(() => {
+        if (searchParams.get('success') === 'true') {
+            setShowSuccessNotification(true);
+            setTimeout(() => setShowSuccessNotification(false), 5000);
+            refreshUser();
+            // Clear URL
+            router.replace('/dashboard/account');
+        }
+    }, [searchParams, refreshUser, router]);
+
     if (isLoading || !isLoggedIn) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -83,7 +95,10 @@ export default function AccountPage() {
         );
     }
 
-    const usagePercent = subscription ? Math.round((subscription.articlesUsed / subscription.articlesLimit) * 100) : 0;
+    let usagePercent = 0;
+    if (subscription && subscription.articlesLimit !== -1) {
+        usagePercent = Math.round((subscription.articlesUsed / subscription.articlesLimit) * 100);
+    }
 
     const handleCancelPlan = async () => {
         setIsCancelling(true);
@@ -101,9 +116,13 @@ export default function AccountPage() {
 
     const handleChangePlan = async (planId: string) => {
         setIsChangingPlan(true);
-        const { error } = await billingApi.changePlan(planId);
+        const { data, error } = await billingApi.changePlan(planId);
         setIsChangingPlan(false);
-        if (!error) {
+        if (!error && data) {
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
             setShowUpgradeModal(null);
             // Refresh all data
             const [subRes, plansRes] = await Promise.all([
@@ -156,6 +175,24 @@ export default function AccountPage() {
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] font-sans text-white selection:bg-lime-400/20 selection:text-lime-300">
+            {/* Success Notification */}
+            {showSuccessNotification && (
+                <div className="fixed top-20 right-6 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="bg-lime-400 text-black px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
+                        <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center">
+                            <Check size={18} />
+                        </div>
+                        <div>
+                            <div className="font-bold text-sm">Payment Successful!</div>
+                            <div className="text-xs opacity-80">Your plan has been updated successfully.</div>
+                        </div>
+                        <button onClick={() => setShowSuccessNotification(false)} className="ml-2 hover:bg-black/10 p-1 rounded-lg transition-colors">
+                            <X size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Navigation */}
             <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-xl">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -267,32 +304,40 @@ export default function AccountPage() {
                                             <FileText size={18} className="text-lime-400" />
                                             <span className="text-base font-bold text-white">Article Usage</span>
                                         </div>
-                                        <span className="text-xs text-neutral-500">Resets {subscription.renewalDate}</span>
+                                        <span className="text-xs text-neutral-500">Resets {subscription.renewalDate || 'at end of month'}</span>
                                     </div>
                                     <div className="flex items-end gap-4 mb-6">
                                         <div>
-                                            <div className="text-5xl font-bold text-white">{subscription.articlesLimit - subscription.articlesUsed}</div>
+                                            <div className="text-5xl font-bold text-white">
+                                                {subscription.articlesLimit === -1 ? (
+                                                    <Infinity size={48} className="mt-1 text-white" />
+                                                ) : (
+                                                    Math.max(0, subscription.articlesLimit - subscription.articlesUsed)
+                                                )}
+                                            </div>
                                             <div className="text-sm text-neutral-500 mt-1">articles remaining</div>
                                         </div>
                                         <div className="text-sm text-neutral-500 mb-1">
-                                            <span className="text-white font-semibold">{subscription.articlesUsed}</span> of {subscription.articlesLimit} used this cycle
+                                            <span className="text-white font-semibold">{subscription.articlesUsed}</span> {subscription.articlesLimit === -1 ? 'generated this cycle' : `of ${subscription.articlesLimit} used this cycle`}
                                         </div>
                                     </div>
-                                    <div className="mb-6">
-                                        <div className="h-3 bg-white/5 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-700 ${usagePercent >= 90 ? 'bg-gradient-to-r from-red-500 to-red-400' :
-                                                    usagePercent >= 70 ? 'bg-gradient-to-r from-yellow-500 to-amber-400' :
-                                                        'bg-gradient-to-r from-lime-500 to-emerald-400'
-                                                    }`}
-                                                style={{ width: `${usagePercent}%` }}
-                                            />
+                                    {subscription.articlesLimit !== -1 && (
+                                        <div className="mb-6">
+                                            <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-700 ${usagePercent >= 90 ? 'bg-gradient-to-r from-red-500 to-red-400' :
+                                                        usagePercent >= 70 ? 'bg-gradient-to-r from-yellow-500 to-amber-400' :
+                                                            'bg-gradient-to-r from-lime-500 to-emerald-400'
+                                                        }`}
+                                                    style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex items-center justify-between mt-2 text-xs text-neutral-500">
+                                                <span>{usagePercent}% used</span>
+                                                <span>{Math.max(0, subscription.articlesLimit - subscription.articlesUsed)} left</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center justify-between mt-2 text-xs text-neutral-500">
-                                            <span>{usagePercent}% used</span>
-                                            <span>{subscription.articlesLimit - subscription.articlesUsed} left</span>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -407,7 +452,7 @@ export default function AccountPage() {
                                                             <Check size={10} /> {payment.status}
                                                         </span>
                                                     </td>
-                                                    <td className="p-4 text-right font-semibold text-white">${(payment.amount / 100).toFixed(2)}</td>
+                                                    <td className="p-4 text-right font-semibold text-white">${payment.amount.toFixed(2)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -415,7 +460,7 @@ export default function AccountPage() {
                                 </div>
                                 <div className="p-4 border-t border-white/5 flex items-center justify-between text-xs text-neutral-500">
                                     <span>Showing {invoices.length} invoices</span>
-                                    <span>Total paid: <strong className="text-white">${(totalPaid / 100).toFixed(2)}</strong></span>
+                                    <span>Total paid: <strong className="text-white">${totalPaid.toFixed(2)}</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -590,7 +635,7 @@ export default function AccountPage() {
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-neutral-400">New plan</span>
                                 <span className="text-sm font-semibold text-lime-400">
-                                    {showUpgradeModal} — ${selectedUpgradePlan.price}/mo
+                                    {showUpgradeModal} — ${selectedUpgradePlan?.price}/mo
                                 </span>
                             </div>
                         </div>
@@ -605,8 +650,8 @@ export default function AccountPage() {
                                 Cancel
                             </button>
                             <button
-                                onClick={() => handleChangePlan(selectedUpgradePlan.id)}
-                                disabled={isChangingPlan}
+                                onClick={() => selectedUpgradePlan && handleChangePlan(selectedUpgradePlan.id)}
+                                disabled={isChangingPlan || !selectedUpgradePlan}
                                 className="flex-1 py-3 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold text-sm rounded-full transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
                                 {isChangingPlan ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <>Confirm Change <ArrowUpRight size={16} /></>}
@@ -616,5 +661,17 @@ export default function AccountPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AccountPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+                <Loader2 className="animate-spin text-lime-400" size={32} />
+            </div>
+        }>
+            <AccountPageInner />
+        </Suspense>
     );
 }

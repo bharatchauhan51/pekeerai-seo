@@ -6,10 +6,14 @@ import Link from 'next/link';
 import {
     FileText, BarChart3, Calendar, TrendingUp, ChevronRight, Eye, Globe,
     Plus, Sparkles, Zap, PenLine, ArrowUpRight, Target, Loader2, LogOut,
-    Menu, X
+    Menu, X, Check, Infinity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { dashboardApi, articleApi, DashboardStats, ArticleListItem, KeywordItem, TrafficBar } from '../lib/api';
+import {
+    dashboardApi, articleApi, billingApi,
+    DashboardStats, ArticleListItem, KeywordItem, TrafficBar,
+    SubscriptionResponse, PlanItem
+} from '../lib/api';
 
 export default function DashboardPage() {
     const { user, isLoggedIn, isLoading, logout } = useAuth();
@@ -23,6 +27,13 @@ export default function DashboardPage() {
     const [trafficBars, setTrafficBars] = useState<TrafficBar[]>([]);
     const [dataLoading, setDataLoading] = useState(true);
 
+    // Subscription & Modal states
+    const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
+    const [plans, setPlans] = useState<PlanItem[]>([]);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [isChangingPlan, setIsChangingPlan] = useState(false);
+    const { refreshUser } = useAuth();
+
     useEffect(() => {
         if (!isLoading && !isLoggedIn) {
             router.push('/login');
@@ -35,22 +46,59 @@ export default function DashboardPage() {
 
         const fetchData = async () => {
             setDataLoading(true);
-            const [statsRes, articlesRes, keywordsRes, trafficRes] = await Promise.all([
+            const [statsRes, articlesRes, keywordsRes, trafficRes, subRes, plansRes] = await Promise.all([
                 dashboardApi.stats(),
                 articleApi.list({ sort: 'recent', limit: 10 }),
                 dashboardApi.keywords(),
                 dashboardApi.traffic('week'),
+                billingApi.subscription(),
+                billingApi.plans()
             ]);
 
             if (statsRes.data) setStats(statsRes.data);
             if (articlesRes.data) setArticles(articlesRes.data.articles);
             if (keywordsRes.data) setKeywords(keywordsRes.data.keywords);
             if (trafficRes.data) setTrafficBars(trafficRes.data.data);
+            if (subRes.data) setSubscription(subRes.data);
+            if (plansRes.data) setPlans(plansRes.data.plans);
             setDataLoading(false);
         };
 
         fetchData();
     }, [isLoggedIn]);
+
+    const handleCreateNewArticle = async (e?: React.MouseEvent) => {
+        if (e) e.preventDefault();
+
+        // If data is still loading, wait or just allow it (backend check handles it)
+        if (!subscription) {
+            router.push('/dashboard/new');
+            return;
+        }
+
+        if (subscription.articlesLimit !== -1 && subscription.articlesUsed >= subscription.articlesLimit) {
+            setShowUpgradeModal(true);
+            return;
+        }
+
+        router.push('/dashboard/new');
+    };
+
+    const handleChangePlan = async (planId: string) => {
+        setIsChangingPlan(true);
+        const { data, error } = await billingApi.changePlan(planId);
+        setIsChangingPlan(false);
+        if (!error && data) {
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
+            const subRes = await billingApi.subscription();
+            if (subRes.data) setSubscription(subRes.data);
+            setShowUpgradeModal(false);
+            await refreshUser();
+        }
+    };
 
     if (isLoading || !isLoggedIn) {
         return (
@@ -123,9 +171,9 @@ export default function DashboardPage() {
                         </h1>
                         <p className="text-neutral-400 text-sm mt-1">Here&apos;s how your content is performing this week.</p>
                     </div>
-                    <Link href="/dashboard/new" className="flex items-center justify-center gap-2 px-5 py-3 bg-lime-400 hover:bg-lime-300 text-black font-bold text-sm rounded-full transition-all active:scale-95 shrink-0">
+                    <button onClick={handleCreateNewArticle} className="flex items-center justify-center gap-2 px-5 py-3 bg-lime-400 hover:bg-lime-300 text-black font-bold text-sm rounded-full transition-all active:scale-95 shrink-0">
                         <Plus size={16} /> Create New Article
-                    </Link>
+                    </button>
                 </div>
 
                 {dataLoading ? (
@@ -162,20 +210,20 @@ export default function DashboardPage() {
                         {/* Main Content Grid */}
                         <div className="grid lg:grid-cols-3 gap-6 mb-8">
                             {/* Recent Articles */}
-                            <div className="lg:col-span-2 bg-white/[0.03] border border-white/10 rounded-2xl">
+                            <div className="lg:col-span-2 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden">
                                 <div className="flex items-center justify-between p-6 border-b border-white/5">
                                     <h2 className="text-base font-bold flex items-center gap-2"><FileText size={18} className="text-lime-400" /> Recent Articles</h2>
-                                    <Link href="/dashboard/new" className="text-xs text-lime-400 font-semibold hover:text-lime-300 transition-colors flex items-center gap-1">
+                                    <button onClick={handleCreateNewArticle} className="text-xs text-lime-400 font-semibold hover:text-lime-300 transition-colors flex items-center gap-1">
                                         Create New <ChevronRight size={14} />
-                                    </Link>
+                                    </button>
                                 </div>
                                 <div className="divide-y divide-white/5">
                                     {articles.length === 0 ? (
                                         <div className="p-8 text-center text-neutral-500 text-sm">
-                                            No articles yet. <Link href="/dashboard/new" className="text-lime-400 hover:text-lime-300">Create your first article</Link>.
+                                            No articles yet. <button onClick={handleCreateNewArticle} className="text-lime-400 hover:text-lime-300">Create your first article</button>.
                                         </div>
                                     ) : articles.map((article) => (
-                                        <Link key={article.id} href={`/dashboard/new?articleId=${article.id}`} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors group cursor-pointer no-underline">
+                                        <Link key={article.id} href={`/dashboard/new?articleId=${article.id}`} className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-white/[0.02] transition-colors group cursor-pointer no-underline min-w-0">
                                             <div className={`w-1.5 h-10 rounded-full shrink-0 ${article.status === 'published' ? 'bg-lime-400' :
                                                 article.status === 'scheduled' ? 'bg-blue-400' : 'bg-neutral-600'
                                                 }`} />
@@ -183,7 +231,7 @@ export default function DashboardPage() {
                                                 <span className="text-sm font-semibold text-white truncate block group-hover:text-lime-400 transition-colors">
                                                     {article.title}
                                                 </span>
-                                                <div className="flex items-center gap-3 text-xs text-neutral-500 mt-1">
+                                                <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500 mt-1 flex-wrap">
                                                     <span className="flex items-center gap-1"><Calendar size={11} /> {article.publishedAt}</span>
                                                     <span className="flex items-center gap-1"><Eye size={11} /> {article.views || '—'}</span>
                                                     <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] uppercase ${article.status === 'published' ? 'bg-lime-400/10 text-lime-400' :
@@ -207,14 +255,14 @@ export default function DashboardPage() {
                                 <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
                                     <h2 className="text-base font-bold mb-4 flex items-center gap-2"><Zap size={18} className="text-lime-400" /> Quick Actions</h2>
                                     <div className="space-y-2">
-                                        <Link href="/dashboard/new" className="flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-lime-400/30 hover:bg-lime-400/[0.03] transition-all group">
+                                        <button onClick={handleCreateNewArticle} className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-lime-400/30 hover:bg-lime-400/[0.03] transition-all group text-left">
                                             <div className="w-9 h-9 rounded-lg bg-lime-400/10 flex items-center justify-center text-lime-400 group-hover:bg-lime-400/20 transition-colors"><PenLine size={16} /></div>
                                             <div className="flex-1">
                                                 <div className="text-sm font-semibold text-white">Write New Article</div>
                                                 <div className="text-xs text-neutral-500">Start with a keyword</div>
                                             </div>
                                             <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-lime-400 transition-colors" />
-                                        </Link>
+                                        </button>
                                         <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-white/15 transition-all group text-left">
                                             <div className="w-9 h-9 rounded-lg bg-blue-400/10 flex items-center justify-center text-blue-400"><BarChart3 size={16} /></div>
                                             <div className="flex-1">
@@ -299,6 +347,79 @@ export default function DashboardPage() {
                     <span>PekkerAI Dashboard v1.0</span>
                 </div>
             </main>
+
+            {/* ─── Upgrade Plan Modal ─── */}
+            {showUpgradeModal && subscription && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={() => setShowUpgradeModal(false)}>
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-4xl w-full shadow-2xl overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white mb-1">Upgrade Your Plan</h3>
+                                <p className="text-sm text-neutral-400">You&apos;ve reached your monthly article limit. Upgrade to continue creating.</p>
+                            </div>
+                            <button onClick={() => setShowUpgradeModal(false)} className="p-2 rounded-lg hover:bg-white/5 text-neutral-400 transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {plans.map((plan) => {
+                                const isCurrent = plan.name === subscription.plan;
+                                const isUpgrade = plan.price > subscription.price;
+                                return (
+                                    <div
+                                        key={plan.id}
+                                        className={`relative bg-white/[0.03] border rounded-2xl p-6 transition-all duration-300 ${isCurrent
+                                            ? 'border-lime-400/40 ring-1 ring-lime-400/20 shadow-[0_0_30px_rgba(163,230,53,0.06)]'
+                                            : 'border-white/10 hover:border-white/20'
+                                            }`}
+                                    >
+                                        {isCurrent && (
+                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-lime-400 text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                                                Current Plan
+                                            </div>
+                                        )}
+                                        <div className="mb-4">
+                                            <div className="text-lg font-bold text-white">{plan.name}</div>
+                                            <div className="flex items-baseline gap-1 mt-1">
+                                                <span className="text-3xl font-bold text-white">${plan.price}</span>
+                                                <span className="text-neutral-500 text-sm">/{plan.interval}</span>
+                                            </div>
+                                            <div className="text-xs text-neutral-500 mt-2">
+                                                {plan.articlesPerMonth === -1 ? 'Unlimited articles' : `${plan.articlesPerMonth} articles / month`}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3 mb-8">
+                                            {plan.features.map((feature, i) => (
+                                                <div key={i} className="flex items-center gap-2 text-xs text-neutral-400">
+                                                    <Check size={14} className="text-lime-400" />
+                                                    {feature}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {isCurrent ? (
+                                            <div className="w-full py-3 text-center text-sm font-semibold text-lime-400 bg-lime-400/10 rounded-full">
+                                                Active
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleChangePlan(plan.id)}
+                                                disabled={isChangingPlan}
+                                                className={`w-full py-3 text-center text-sm font-bold rounded-full transition-all active:scale-95 ${isUpgrade
+                                                    ? 'bg-lime-400 hover:bg-lime-300 text-black'
+                                                    : 'border border-white/10 text-neutral-400 hover:text-white hover:border-white/20'
+                                                    }`}
+                                            >
+                                                {isChangingPlan ? <Loader2 size={18} className="animate-spin mx-auto" /> : isUpgrade ? 'Upgrade Now' : 'Downgrade'}
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
