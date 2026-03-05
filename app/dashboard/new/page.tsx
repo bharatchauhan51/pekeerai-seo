@@ -246,10 +246,12 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, onGenerationCompl
 }
 
 // ─── Step 3: Review & Refine ───
-function Step3({ onNext, onBack, generation, onHtmlUpdate }: {
+function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
     onNext: () => void; onBack: () => void;
     generation: GenerationData | null;
     onHtmlUpdate: (html: string) => void;
+    keyword: string;
+    meta: ArticleMeta | null;
 }) {
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai'; text: string }>>([]);
     const [chatInput, setChatInput] = useState('');
@@ -311,9 +313,9 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate }: {
     const handleSave = async () => {
         if (!generation) return;
         const { error } = await articleApi.save(generation.articleId, {
-            title: '', // will use existing
+            title: meta?.title || keyword,
             html: currentHtml,
-            meta: { title: '', description: '' },
+            meta: { title: meta?.title || keyword, description: meta?.description || '' },
             faqs: generation.faqs.map(f => ({ question: f.question, answer: f.answer })),
             status: 'draft',
         });
@@ -804,6 +806,8 @@ export default function NewArticlePage() {
                         onBack={() => setCurrentStep(2)}
                         generation={generationData}
                         onHtmlUpdate={(html) => setGenerationData(prev => prev ? { ...prev, html } : prev)}
+                        keyword={keyword}
+                        meta={analysisData?.meta || null}
                     />
                 )}
                 {currentStep === 4 && (
