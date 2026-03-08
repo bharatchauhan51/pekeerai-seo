@@ -16,6 +16,7 @@ import {
     SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail,
     SubscriptionResponse, PlanItem
 } from '../../lib/api';
+import CustomDropdown from '../../components/CustomDropdown';
 
 // ─── Shared Types for inter-step data ───
 interface AnalysisData {
@@ -148,29 +149,46 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
                     />
                 </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
-                    <label className="flex items-center gap-2 text-sm font-bold text-neutral-400 uppercase tracking-wider mb-3"><Mic2 size={14} /> Tone</label>
-                    <select value={tone} onChange={(e) => setTone(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50">
-                        <option>Professional &amp; Direct</option><option>Casual &amp; Conversational</option><option>Technical &amp; In-Depth</option><option>Persuasive &amp; Sales-Oriented</option>
-                    </select>
-                </div>
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
-                    <label className="flex items-center gap-2 text-sm font-bold text-neutral-400 uppercase tracking-wider mb-3"><Globe size={14} /> Point of View</label>
-                    <select value={pov} onChange={(e) => setPov(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50">
-                        <option>Second Person (You/Your)</option><option>First Person (I/We)</option><option>Third Person (They/The)</option>
-                    </select>
-                </div>
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 sm:col-span-2">
-                    <label className="flex items-center gap-2 text-sm font-bold text-neutral-400 uppercase tracking-wider mb-3"><FileText size={14} /> Approx. Word Count (Optional)</label>
-                    <input
-                        type="number"
-                        value={targetWordCount}
-                        onChange={(e) => setTargetWordCount(e.target.value)}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50"
-                        placeholder="e.g. 1500"
-                    />
-                    <p className="text-[10px] text-neutral-500 mt-2">Leave blank to let AI recommend the optimal length based on SERP analysis.</p>
+            <div className="grid lg:grid-cols-3 sm:grid-cols-2 gap-5 mb-10">
+                <CustomDropdown
+                    label="Tone"
+                    icon={<Mic2 size={13} className="text-lime-400/70" />}
+                    value={tone}
+                    onChange={setTone}
+                    options={[
+                        { label: 'Professional & Direct', value: 'Professional & Direct' },
+                        { label: 'Casual & Conversational', value: 'Casual & Conversational' },
+                        { label: 'Technical & In-Depth', value: 'Technical & In-Depth' },
+                        { label: 'Persuasive & Sales-Oriented', value: 'Persuasive & Sales-Oriented' }
+                    ]}
+                />
+                <CustomDropdown
+                    label="Point of View"
+                    icon={<Globe size={13} className="text-lime-400/70" />}
+                    value={pov}
+                    onChange={setPov}
+                    options={[
+                        { label: 'Second Person (You/Your)', value: 'Second Person (You/Your)' },
+                        { label: 'First Person (I/We)', value: 'First Person (I/We)' },
+                        { label: 'Third Person (They/The)', value: 'Third Person (They/The)' }
+                    ]}
+                />
+                <div className="group">
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-2.5 transition-colors group-hover:text-neutral-400">
+                        <FileText size={13} className="text-lime-400/70" /> Approx. Word Count
+                    </label>
+                    <div className="relative group/input">
+                        <input
+                            type="number"
+                            value={targetWordCount}
+                            onChange={(e) => setTargetWordCount(e.target.value)}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl text-white pl-4 pr-16 py-3.5 text-sm font-semibold placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-lime-400/30 transition-all hover:bg-black/60 hover:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            placeholder="Optional (e.g. 1500)"
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-focus-within/input:opacity-100 transition-opacity flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-lime-400 uppercase tracking-widest bg-lime-400/10 px-1.5 py-0.5 rounded border border-lime-400/20">Words</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
@@ -869,10 +887,17 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
                                         <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">CMS Destination</label>
-                                        <select value={scheduleCms} onChange={(e) => setScheduleCms(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50">
-                                            <option>WordPress (connected)</option><option>Webflow</option><option>Ghost</option><option>Custom API</option>
-                                        </select>
+                                        <CustomDropdown
+                                            label="CMS Destination"
+                                            value={scheduleCms}
+                                            onChange={setScheduleCms}
+                                            options={[
+                                                { label: 'WordPress (connected)', value: 'WordPress (connected)' },
+                                                { label: 'Webflow', value: 'Webflow' },
+                                                { label: 'Ghost', value: 'Ghost' },
+                                                { label: 'Custom API', value: 'Custom API' }
+                                            ]}
+                                        />
                                     </div>
                                 </div>
                                 <button onClick={handleSchedule} disabled={isScheduling} className="mt-6 w-full py-3.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 flex items-center justify-center gap-2">
