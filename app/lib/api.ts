@@ -78,13 +78,13 @@ export const authApi = {
 
 // ─── Article APIs ───
 export const articleApi = {
-    analyze: (data: { keyword: string; tone: string; pointOfView: string; competitorUrl?: string }) =>
+    analyze: (data: { keyword: string; tone: string; pointOfView: string; targetWordCount?: number; competitorUrl?: string }) =>
         apiFetch<AnalyzeResponse>('/api/articles/analyze', {
             method: 'POST',
             body: JSON.stringify(data),
         }),
 
-    generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; articleId?: string }) =>
+    generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; targetWordCount?: number; articleId?: string }) =>
         apiFetch<GenerateResponse>('/api/articles/generate', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -210,6 +210,7 @@ export interface AnalyzeResponse {
     outline: OutlineItem[];
     meta: ArticleMeta;
     recommendations: { targetWordCount: string; targetHeadings: string };
+    targetWordCount?: number;
 }
 
 export interface GenerateResponse {

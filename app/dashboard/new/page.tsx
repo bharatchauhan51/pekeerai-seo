@@ -24,6 +24,7 @@ interface AnalysisData {
     outline: OutlineItem[];
     meta: ArticleMeta;
     recommendations: { targetWordCount: string; targetHeadings: string };
+    targetWordCount?: number;
 }
 
 interface GenerationData {
@@ -83,12 +84,13 @@ function StepIndicator({ currentStep, onStepClick, lockedSteps = [] }: { current
 // ─── Step 1: Keyword Input ───
 function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
     onNext: () => void;
-    onAnalysisComplete: (data: AnalysisData, keyword: string, tone: string, pov: string) => void;
+    onAnalysisComplete: (data: AnalysisData, keyword: string, tone: string, pov: string, targetWordCount?: number) => void;
     onLimitReached: () => void;
 }) {
     const [keyword, setKeyword] = useState('');
     const [tone, setTone] = useState('Professional & Direct');
     const [pov, setPov] = useState('Second Person (You/Your)');
+    const [targetWordCount, setTargetWordCount] = useState<string>('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState('');
 
@@ -112,6 +114,7 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
             keyword: keyword.trim(),
             tone,
             pointOfView: pov,
+            targetWordCount: targetWordCount ? parseInt(targetWordCount) : undefined,
         });
 
         setIsAnalyzing(false);
@@ -121,7 +124,10 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
             return;
         }
 
-        onAnalysisComplete(data, keyword.trim(), tone, pov);
+        if (data) {
+            data.targetWordCount = targetWordCount ? parseInt(targetWordCount) : undefined;
+        }
+        onAnalysisComplete(data, keyword.trim(), tone, pov, targetWordCount ? parseInt(targetWordCount) : undefined);
         onNext();
     };
 
@@ -155,6 +161,17 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
                         <option>Second Person (You/Your)</option><option>First Person (I/We)</option><option>Third Person (They/The)</option>
                     </select>
                 </div>
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 sm:col-span-2">
+                    <label className="flex items-center gap-2 text-sm font-bold text-neutral-400 uppercase tracking-wider mb-3"><FileText size={14} /> Approx. Word Count (Optional)</label>
+                    <input
+                        type="number"
+                        value={targetWordCount}
+                        onChange={(e) => setTargetWordCount(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50"
+                        placeholder="e.g. 1500"
+                    />
+                    <p className="text-[10px] text-neutral-500 mt-2">Leave blank to let AI recommend the optimal length based on SERP analysis.</p>
+                </div>
             </div>
             {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
             <button onClick={handleAnalyze} disabled={isAnalyzing} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 text-base mx-auto">
@@ -165,10 +182,11 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
 }
 
 // ─── Step 2: SERP & Outline ───
-function Step2({ onNext, onBack, analysis, keyword, tone, pov, onGenerationComplete }: {
+function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, onGenerationComplete }: {
     onNext: () => void; onBack: () => void;
     analysis: AnalysisData | null;
     keyword: string; tone: string; pov: string;
+    targetWordCount?: number;
     onGenerationComplete: (data: GenerationData) => void;
 }) {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -185,6 +203,7 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, onGenerationCompl
             meta: analysis.meta,
             tone,
             pointOfView: pov,
+            targetWordCount: targetWordCount || (analysis.targetWordCount ? analysis.targetWordCount : undefined),
             ...(analysis.articleId ? { articleId: analysis.articleId } : {}),
         });
 
@@ -884,6 +903,7 @@ function NewArticlePageInner() {
     const [keyword, setKeyword] = useState('');
     const [tone, setTone] = useState('');
     const [pov, setPov] = useState('');
+    const [targetWordCount, setTargetWordCount] = useState<number | undefined>(undefined);
 
     // Subscription & Modal states
     const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
@@ -1030,11 +1050,12 @@ function NewArticlePageInner() {
                     <Step1
                         onNext={() => setCurrentStep(2)}
                         onLimitReached={() => setShowUpgradeModal(true)}
-                        onAnalysisComplete={(data, kw, t, p) => {
+                        onAnalysisComplete={(data, kw, t, p, twc) => {
                             setAnalysisData(data);
                             setKeyword(kw);
                             setTone(t);
                             setPov(p);
+                            setTargetWordCount(twc);
                         }}
                     />
                 )}
@@ -1046,6 +1067,7 @@ function NewArticlePageInner() {
                         keyword={keyword}
                         tone={tone}
                         pov={pov}
+                        targetWordCount={targetWordCount}
                         onGenerationComplete={(data) => setGenerationData(data)}
                     />
                 )}
