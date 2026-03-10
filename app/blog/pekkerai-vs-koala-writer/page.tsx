@@ -557,7 +557,7 @@ export default function BlogPost() {
                             <p className="text-black/80 font-medium mb-8 max-w-xl mx-auto">
                                 Generate a publish-ready, SEO-scored article from any keyword in under 5 minutes.
                             </p>
-                            <Link href="/dashboard" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
+                            <Link href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
                                 Start Free <ArrowRight size={20} />
                             </Link>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-6 text-sm font-semibold opacity-80">

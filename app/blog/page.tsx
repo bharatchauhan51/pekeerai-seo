@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'seo-content-brief-guide',
+        title: 'How to Write an SEO Content Brief That Actually Produces Ranking Articles',
+        description: "The difference between a 'page 1' success and a buried draft is almost always found in the quality of the brief. 8 essential elements for 2026.",
+        date: 'March 2026',
+        category: 'SEO Strategy',
+    },
+    {
         slug: 'surfer-seo-alternatives',
         title: 'Surfer SEO Alternatives That Are 10x Cheaper in 2026',
         description: "Surfer SEO costs $89/mo. These 5 alternatives start at $9 — and some produce better SEO content. Full comparison with pricing, pros/cons, and recommendations.",

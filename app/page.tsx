@@ -874,23 +874,31 @@ export default function App() {
           </div>
         </section>
 
-        {/* ─── Newsletter / CTA Banner ─── */}
+        {/* ─── Final CTA Banner ─── */}
         <section className="py-24 px-6">
           <RevealOnScroll className="max-w-4xl mx-auto">
-            <div className="relative rounded-3xl overflow-hidden">
-              {/* Green glow bg */}
-              <div className="absolute inset-0 bg-lime-400 opacity-100"></div>
-              <div className="absolute inset-0 bg-gradient-to-br from-lime-400 via-lime-500 to-green-600"></div>
-
-              <div className="relative z-10 px-8 sm:px-16 py-16 text-center">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-black mb-4">Join Our Newsletter</h2>
-                <p className="text-black/70 text-lg mb-8 max-w-lg mx-auto">Stay up-to-date on SEO trends, product updates, and exclusive tips. No spam, ever.</p>
-                <form onSubmit={(e) => { e.preventDefault(); openModal(); }} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                  <input type="email" placeholder="Your email address" className="flex-1 px-5 py-3.5 rounded-full bg-black/20 border border-black/30 text-black placeholder:text-black/60 focus:outline-none focus:ring-2 focus:ring-black/40 font-medium" />
-                  <button type="submit" className="px-8 py-3.5 bg-black hover:bg-neutral-900 text-lime-400 font-bold rounded-full transition-all active:scale-95">
-                    Subscribe
+            <div className="bg-lime-400 text-black p-10 sm:p-20 rounded-[2.5rem] text-center shadow-[0_20px_60px_rgba(163,230,53,0.15)] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000">
+                <Sparkles size={180} />
+              </div>
+              <div className="absolute bottom-0 left-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000 rotate-180">
+                <Sparkles size={120} />
+              </div>
+              <div className="relative z-10">
+                <h2 className="text-3xl sm:text-5xl font-extrabold mb-6 tracking-tight">Ready to scale content that ranks?</h2>
+                <p className="text-black/80 font-medium text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                  PekkerAI handles the research, the briefing, and the writing in seconds. 
+                  Get publish-ready SEO articles that actually move the needle.
+                </p>
+                <div className="flex flex-col items-center gap-6">
+                  <button onClick={openModal} className="px-10 py-5 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-xl flex items-center gap-3 shadow-2xl">
+                    Start Generating Now <ArrowRight size={24} />
                   </button>
-                </form>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 text-sm font-bold uppercase tracking-widest opacity-70">
+                    <span className="flex items-center gap-2"><CheckCircle2 size={18} /> Data-driven outlines</span>
+                    <span className="flex items-center gap-2"><CheckCircle2 size={18} /> Auto-LSI research</span>
+                  </div>
+                </div>
               </div>
             </div>
           </RevealOnScroll>

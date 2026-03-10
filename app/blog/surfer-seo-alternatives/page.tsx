@@ -529,7 +529,7 @@ export default function BlogPost() {
                             <p className="text-black/80 font-medium mb-8 max-w-xl mx-auto">
                                 Go from keyword to publish-ready article in under 5 minutes. SEO-scored, schema-ready FAQs, and export-ready HTML — all for $0.49/article.
                             </p>
-                            <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
+                            <Link href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
                                 Start Free <ArrowRight size={20} />
                             </Link>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-6 text-sm font-semibold opacity-80">
