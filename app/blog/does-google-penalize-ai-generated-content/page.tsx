@@ -177,7 +177,7 @@ export default function BlogPost() {
                             </div>
                             <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
                                 <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle2 className="text-lime-400" size={20} /> Step 2: Generate a Structured Brief First</h3>
-                                <p className="text-sm m-0">Define the audience, tone, and headings <em>before</em> generating. Tools like PekkerAI do this automatically by analyzing SERP results. <span className="text-neutral-400 mt-2 block">If you're still deciding which generator is right for your workflow, read our detailed <Link href="/blog/pekkerai-vs-koala-writer" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">PekkerAI vs Koala Writer comparison</Link>.</span></p>
+                                <p className="text-sm m-0">Define the audience, tone, and headings <em>before</em> generating. Understanding <Link href="/blog/seo-content-brief-guide" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">how to write an SEO content brief</Link> is the key to consistency. Tools like PekkerAI do this automatically by analyzing SERP results. <span className="text-neutral-400 mt-2 block">If you're still deciding which generator is right for your workflow, read our detailed <Link href="/blog/pekkerai-vs-koala-writer" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">PekkerAI vs Koala Writer comparison</Link>.</span></p>
                             </div>
                             <div className="bg-white/5 border border-white/10 p-6 rounded-xl">
                                 <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2"><CheckCircle2 className="text-lime-400" size={20} /> Step 3: Always Add the Human Layer</h3>
@@ -194,7 +194,7 @@ export default function BlogPost() {
                             If you're a founder trying to build organic traffic without an $800/month content budget: <strong className="text-lime-400 font-normal">Google penalizes bad content. It doesn't penalize AI content.</strong> Use AI to create content faster, and use human judgment to make it genuinely useful.
                         </p>
                         <p>
-                            The teams winning at SEO in 2026 use AI as a force multiplier — generating structured drafts quickly, then applying their expertise to elevate it into something no competitor has published yet. That&apos;s a content strategy. And it works. If you&apos;re looking for the right tool to power that strategy without breaking the budget, we compared the <Link href="/blog/surfer-seo-alternatives" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">best Surfer SEO alternatives that cost 10x less</Link>.
+                            The teams winning at SEO in 2026 use AI as a force multiplier — generating structured drafts quickly, then applying their expertise to elevate it into something no competitor has published yet. That&apos;s a <Link href="/blog/saas-founder-content-strategy" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">content strategy a solo SaaS founder can actually execute</Link>. And it works. If you&apos;re looking for the right tool to power that strategy without breaking the budget, we compared the <Link href="/blog/surfer-seo-alternatives" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">best Surfer SEO alternatives that cost 10x less</Link>.
                         </p>
                     </div>
 
@@ -208,7 +208,7 @@ export default function BlogPost() {
                             <p className="text-black/80 font-medium mb-8 max-w-xl mx-auto">
                                 PekkerAI generates SEO-optimized, publish-ready articles for $1 — with automatic LSI research, competitor analysis, and SEO scoring built in.
                             </p>
-                            <Link href="https://app.pekkerai.com" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
+                            <Link href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
                                 Try PekkerAI Free <ArrowRight size={20} />
                             </Link>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-6 text-sm font-semibold opacity-80">

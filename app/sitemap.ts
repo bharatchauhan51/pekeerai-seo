@@ -65,6 +65,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'monthly',
             priority: 0.8,
         },
+         {
+            url: `${baseUrl}/blog/seo-content-brief-guide`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/blog/saas-founder-content-strategy`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.8
+        },
         {
             url: `${baseUrl}/login`,
             lastModified: new Date(),

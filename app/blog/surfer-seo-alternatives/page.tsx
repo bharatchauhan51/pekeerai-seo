@@ -457,7 +457,7 @@ export default function BlogPost() {
                             Surfer SEO is a strong tool with a loyal user base. But its pricing model was designed for a world where &quot;content optimization&quot; and &quot;content creation&quot; were separate line items. In 2026, the best tools merge both — and they do it at a fraction of the cost.
                         </p>
                         <p>
-                            If you&apos;re spending $89–$129/month on Surfer SEO and producing fewer than 50 articles/month, you&apos;re paying too much. PekkerAI delivers 100 articles for $49/month. Koala Writer gives you bulk affiliate content. NeuronWriter mimics Surfer&apos;s workflow at one-quarter the price. The question isn&apos;t whether to switch — it&apos;s which alternative fits your workflow best.
+                            If you&apos;re spending $89–$129/month on Surfer SEO and producing fewer than 50 articles/month, you&apos;re paying too much. PekkerAI delivers 100 articles for $49/month. Koala Writer gives you bulk affiliate content. NeuronWriter mimics Surfer&apos;s workflow at one-quarter the price. The question isn&apos;t whether to switch — it&apos;s which alternative fits your workflow best. If you&apos;re a solo founder wondering how to build a <Link href="/blog/saas-founder-content-strategy" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">full SaaS content strategy without a marketing team</Link>, we wrote a step-by-step playbook for that.
                         </p>
                         <p>
                             <strong>Our recommendation:</strong> Start with a free trial of PekkerAI (no credit card required) and generate your first article in under 5 minutes. If it doesn&apos;t match your needs, try NeuronWriter or Koala Writer. All three cost less per month than a single month of Surfer SEO.
@@ -529,7 +529,7 @@ export default function BlogPost() {
                             <p className="text-black/80 font-medium mb-8 max-w-xl mx-auto">
                                 Go from keyword to publish-ready article in under 5 minutes. SEO-scored, schema-ready FAQs, and export-ready HTML — all for $0.49/article.
                             </p>
-                            <Link href="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
+                            <Link href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-black text-lime-400 font-bold rounded-full hover:bg-neutral-900 transition-all active:scale-95 text-lg">
                                 Start Free <ArrowRight size={20} />
                             </Link>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-6 text-sm font-semibold opacity-80">
