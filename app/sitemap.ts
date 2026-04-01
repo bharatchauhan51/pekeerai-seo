@@ -64,6 +64,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             lastModified: new Date(),
             changeFrequency: 'monthly',
             priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/blog/saas-founder-content-strategy`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.8,
         }
     ];
 }
