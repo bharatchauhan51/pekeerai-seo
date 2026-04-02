@@ -7,14 +7,14 @@ import {
     Sparkles, Search, FileText, Calendar, ChevronRight, ChevronLeft, Check, ArrowRight,
     Globe, Mic2, BarChart3, ExternalLink, GripVertical, Clock, Tag, Zap,
     Bold, Italic, List, Link2, Image, AlignLeft, Heading1, Heading2, Quote, Code, Undo2, Redo2,
-    ChevronDown, X, CalendarDays, LogOut, Loader2, Download, Menu,
-    SendHorizontal, Bot, MessageSquare, CornerDownLeft, Save
+    ChevronDown, ChevronUp, X, CalendarDays, LogOut, Loader2, Download, Menu,
+    SendHorizontal, Bot, MessageSquare, CornerDownLeft, Save, Trash2, Plus, Hash, HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
     articleApi, billingApi,
     SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail,
-    SubscriptionResponse, PlanItem
+    SubscriptionResponse, PlanItem, AdvancedOutline, AdvancedOutlineResponse
 } from '../../lib/api';
 import CustomDropdown from '../../components/CustomDropdown';
 
@@ -25,6 +25,7 @@ interface AnalysisData {
     outline: OutlineItem[];
     meta: ArticleMeta;
     recommendations: { targetWordCount: string; targetHeadings: string };
+    lsiKeywords?: string[];
     targetWordCount?: number;
 }
 
@@ -199,7 +200,7 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
     );
 }
 
-// ─── Step 2: SERP & Outline ───
+// ─── Step 2: Outline Editor ───
 function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, onGenerationComplete }: {
     onNext: () => void; onBack: () => void;
     analysis: AnalysisData | null;
@@ -210,14 +211,105 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, 
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState('');
 
+    // Outline state
+    const [activeMode, setActiveMode] = useState<'quick' | 'advanced'>('quick');
+    const [quickDraftItems, setQuickDraftItems] = useState<OutlineItem[]>(analysis?.outline || []);
+    const [advancedOutline, setAdvancedOutline] = useState<AdvancedOutline | null>(null);
+    const [isGeneratingAdvanced, setIsGeneratingAdvanced] = useState(false);
+    const [advancedError, setAdvancedError] = useState('');
+
+    // Editing states
+    const [editingIdx, setEditingIdx] = useState<number | null>(null);
+    const [editText, setEditText] = useState('');
+    const [dragIdx, setDragIdx] = useState<number | null>(null);
+    const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+    // Advanced mode editing
+    const [editingAdvanced, setEditingAdvanced] = useState<{ sIdx: number; subIdx?: number } | null>(null);
+    const [editAdvancedText, setEditAdvancedText] = useState('');
+    const [editingFaqIdx, setEditingFaqIdx] = useState<number | null>(null);
+    const [editFaqQ, setEditFaqQ] = useState('');
+    const [editFaqA, setEditFaqA] = useState('');
+    const [editIntroHook, setEditIntroHook] = useState(false);
+    const [editConclusionCta, setEditConclusionCta] = useState(false);
+
+    // LSI keywords
+    const lsiKeywords = analysis?.lsiKeywords || [];
+
+    // Sync quick draft from analysis
+    useEffect(() => {
+        if (analysis?.outline) setQuickDraftItems(analysis.outline);
+    }, [analysis?.outline]);
+
+    // Count headings in current outline
+    const currentHeadingCount = activeMode === 'quick'
+        ? quickDraftItems.length
+        : advancedOutline
+            ? advancedOutline.sections.reduce((acc, s) => acc + 1 + s.subsections.length, 0)
+            : 0;
+
+    // Parse recommendation ranges
+    const targetHeadingsStr = analysis?.recommendations?.targetHeadings || '';
+    const [minHeadings, maxHeadings] = targetHeadingsStr.split('-').map(Number);
+    const headingInRange = currentHeadingCount >= (minHeadings || 0) && currentHeadingCount <= (maxHeadings || Infinity);
+    const headingColor = headingInRange ? 'text-lime-400' : currentHeadingCount < (minHeadings || 0) ? 'text-yellow-400' : 'text-yellow-400';
+
+    // LSI keyword coverage
+    const allHeadingTexts = activeMode === 'quick'
+        ? quickDraftItems.map(i => i.text.toLowerCase())
+        : advancedOutline
+            ? advancedOutline.sections.flatMap(s => [s.title.toLowerCase(), ...s.subsections.map(sub => sub.title.toLowerCase())])
+            : [];
+    const coveredLsi = lsiKeywords.filter(kw => allHeadingTexts.some(t => t.includes(kw.toLowerCase())));
+    const lsiPercentage = lsiKeywords.length > 0 ? Math.round((coveredLsi.length / lsiKeywords.length) * 100) : 0;
+    const lsiColor = lsiPercentage >= 70 ? 'text-lime-400' : lsiPercentage >= 50 ? 'text-yellow-400' : 'text-red-400';
+    const lsiBgColor = lsiPercentage >= 70 ? 'bg-lime-400' : lsiPercentage >= 50 ? 'bg-yellow-400' : 'bg-red-400';
+
+    // Fetch advanced outline
+    const handleFetchAdvanced = async () => {
+        if (advancedOutline) { setActiveMode('advanced'); return; }
+        if (!analysis?.articleId) return;
+        setIsGeneratingAdvanced(true);
+        setAdvancedError('');
+
+        const { data, error: apiErr } = await articleApi.outline({
+            articleId: analysis.articleId,
+            keyword,
+            lsiKeywords,
+            serpResults: analysis.serpResults,
+        });
+
+        setIsGeneratingAdvanced(false);
+
+        if (apiErr || !data) {
+            setAdvancedError(apiErr || 'Could not generate advanced outline. Try again or use Quick Draft.');
+            return;
+        }
+
+        setAdvancedOutline(data.outline);
+        setActiveMode('advanced');
+    };
+
+    // Generate article
     const handleGenerate = async () => {
         if (!analysis) return;
         setError('');
         setIsGenerating(true);
 
+        // Build the flat outline to send to generate API
+        let outlineToSend: OutlineItem[] = [];
+        if (activeMode === 'quick') {
+            outlineToSend = quickDraftItems;
+        } else if (advancedOutline) {
+            outlineToSend = advancedOutline.sections.flatMap(s => [
+                { type: 'h2' as const, text: s.title },
+                ...s.subsections.map(sub => ({ type: 'h3' as const, text: sub.title })),
+            ]);
+        }
+
         const { data, error: apiError } = await articleApi.generate({
             keyword,
-            outline: analysis.outline,
+            outline: outlineToSend,
             meta: analysis.meta,
             tone,
             pointOfView: pov,
@@ -226,75 +318,432 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, 
         });
 
         setIsGenerating(false);
-
-        if (apiError || !data) {
-            setError(apiError || 'Generation failed. Please try again.');
-            return;
-        }
-
+        if (apiError || !data) { setError(apiError || 'Generation failed. Please try again.'); return; }
         onGenerationComplete(data);
         onNext();
+    };
+
+    // ─── Quick Draft helpers ───
+    const startEdit = (idx: number) => { setEditingIdx(idx); setEditText(quickDraftItems[idx].text); };
+    const saveEdit = () => {
+        if (editingIdx === null) return;
+        setQuickDraftItems(prev => prev.map((item, i) => i === editingIdx ? { ...item, text: editText } : item));
+        setEditingIdx(null);
+    };
+    const toggleType = (idx: number) => {
+        setQuickDraftItems(prev => prev.map((item, i) => i === idx ? { ...item, type: item.type === 'h2' ? 'h3' : 'h2' } : item));
+    };
+    const deleteItem = (idx: number) => { setQuickDraftItems(prev => prev.filter((_, i) => i !== idx)); };
+    const addHeading = (type: 'h2' | 'h3') => { setQuickDraftItems(prev => [...prev, { type, text: 'New heading' }]); };
+
+    // Drag and drop
+    const handleDragStart = (idx: number) => setDragIdx(idx);
+    const handleDragOver = (e: React.DragEvent, idx: number) => { e.preventDefault(); setDragOverIdx(idx); };
+    const handleDrop = (idx: number) => {
+        if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setDragOverIdx(null); return; }
+        const items = [...quickDraftItems];
+        const [moved] = items.splice(dragIdx, 1);
+        items.splice(idx, 0, moved);
+        setQuickDraftItems(items);
+        setDragIdx(null);
+        setDragOverIdx(null);
+    };
+
+    // ─── Advanced mode helpers ───
+    const startAdvancedEdit = (sIdx: number, subIdx?: number) => {
+        setEditingAdvanced({ sIdx, subIdx });
+        if (!advancedOutline) return;
+        if (subIdx !== undefined) {
+            setEditAdvancedText(advancedOutline.sections[sIdx].subsections[subIdx].title);
+        } else {
+            setEditAdvancedText(advancedOutline.sections[sIdx].title);
+        }
+    };
+    const saveAdvancedEdit = () => {
+        if (!editingAdvanced || !advancedOutline) return;
+        const { sIdx, subIdx } = editingAdvanced;
+        setAdvancedOutline(prev => {
+            if (!prev) return prev;
+            const sections = prev.sections.map((s, si) => {
+                if (si !== sIdx) return s;
+                if (subIdx !== undefined) {
+                    return { ...s, subsections: s.subsections.map((sub, sbi) => sbi === subIdx ? { ...sub, title: editAdvancedText } : sub) };
+                }
+                return { ...s, title: editAdvancedText };
+            });
+            return { ...prev, sections };
+        });
+        setEditingAdvanced(null);
+    };
+    const deleteAdvancedSection = (sIdx: number) => {
+        setAdvancedOutline(prev => prev ? { ...prev, sections: prev.sections.filter((_, i) => i !== sIdx) } : prev);
+    };
+    const deleteAdvancedSub = (sIdx: number, subIdx: number) => {
+        setAdvancedOutline(prev => {
+            if (!prev) return prev;
+            return { ...prev, sections: prev.sections.map((s, si) => si === sIdx ? { ...s, subsections: s.subsections.filter((_, i) => i !== subIdx) } : s) };
+        });
+    };
+    const addAdvancedSection = () => {
+        setAdvancedOutline(prev => prev ? { ...prev, sections: [...prev.sections, { type: 'H2' as const, title: 'New Section', subsections: [] }] } : prev);
+    };
+    const addAdvancedSub = (sIdx: number) => {
+        setAdvancedOutline(prev => {
+            if (!prev) return prev;
+            return { ...prev, sections: prev.sections.map((s, si) => si === sIdx ? { ...s, subsections: [...s.subsections, { type: 'H3' as const, title: 'New Subsection' }] } : s) };
+        });
+    };
+
+    // FAQ helpers
+    const startFaqEdit = (idx: number) => {
+        if (!advancedOutline) return;
+        setEditingFaqIdx(idx);
+        setEditFaqQ(advancedOutline.faq[idx].q);
+        setEditFaqA(advancedOutline.faq[idx].a);
+    };
+    const saveFaqEdit = () => {
+        if (editingFaqIdx === null || !advancedOutline) return;
+        setAdvancedOutline(prev => {
+            if (!prev) return prev;
+            return { ...prev, faq: prev.faq.map((f, i) => i === editingFaqIdx ? { q: editFaqQ, a: editFaqA } : f) };
+        });
+        setEditingFaqIdx(null);
+    };
+    const deleteFaq = (idx: number) => {
+        setAdvancedOutline(prev => prev ? { ...prev, faq: prev.faq.filter((_, i) => i !== idx) } : prev);
+    };
+    const addFaq = () => {
+        setAdvancedOutline(prev => prev ? { ...prev, faq: [...prev.faq, { q: 'New question?', a: 'Answer here...' }] } : prev);
+    };
+
+    // Collapsed sections state for advanced
+    const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
+    const toggleCollapse = (idx: number) => {
+        setCollapsedSections(prev => {
+            const next = new Set(prev);
+            next.has(idx) ? next.delete(idx) : next.add(idx);
+            return next;
+        });
     };
 
     if (!analysis) return null;
 
     return (
         <div className="animate-fade-in">
-            <div className="text-center mb-10">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">SERP Research & <span className="text-lime-400">Outline</span></h2>
-                <p className="text-neutral-400 max-w-lg mx-auto">We analyzed the top-ranking pages and generated a smart outline. Drag to reorder or edit headings.</p>
+            <div className="text-center mb-6 sm:mb-10">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 sm:mb-3">Edit Your <span className="text-lime-400">Outline</span></h2>
+                <p className="text-neutral-400 max-w-lg mx-auto text-sm sm:text-base">Review and customize the article structure. Choose Quick Draft or Advanced mode.</p>
             </div>
-            <div className="flex items-center justify-between mb-8">
-                <button onClick={onBack} className="flex items-center gap-2 px-5 py-2.5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-semibold rounded-full transition-all text-sm"><ChevronLeft size={16} /> Back</button>
-                <button onClick={handleGenerate} disabled={isGenerating} className="flex items-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 text-sm">
-                    {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : <>Generate Full Article <Sparkles size={16} /></>}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
+                <button onClick={onBack} className="flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-semibold rounded-full transition-all text-sm"><ChevronLeft size={16} /> Back</button>
+                <button onClick={handleGenerate} disabled={isGenerating} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 text-sm">
+                    {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : <>Generate Article <ArrowRight size={16} /></>}
                 </button>
             </div>
+
             {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
-            <div className="grid lg:grid-cols-2 gap-6">
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                    <h3 className="flex items-center gap-2 text-base font-bold text-white mb-5"><BarChart3 size={18} className="text-lime-400" /> Live SERP Analysis</h3>
-                    <div className="space-y-3">
-                        {analysis.serpResults.map((r) => (
-                            <div key={r.position} className="flex items-start gap-3 p-3 bg-black/30 rounded-xl border border-white/5 hover:border-white/10 transition-colors group">
-                                <span className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-neutral-400 shrink-0 mt-0.5">{r.position}</span>
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-semibold text-white truncate group-hover:text-lime-400 transition-colors">{r.title}</div>
-                                    <div className="text-xs text-neutral-500 mt-0.5 flex items-center gap-3">
-                                        <span className="flex items-center gap-1"><ExternalLink size={10} />{r.url}</span>
-                                        <span>{r.wordCount} words</span>
-                                        <span>{r.headings} headings</span>
+            {advancedError && <p className="text-red-400 text-sm mb-4 text-center">{advancedError}</p>}
+
+            <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+                {/* ─── Main Panel: Outline Editor ─── */}
+                <div className="md:col-span-2 space-y-4 sm:space-y-6">
+                    {/* Mode Toggle */}
+                    <div className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                            <button
+                                onClick={() => setActiveMode('quick')}
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${activeMode === 'quick' ? 'bg-white/10 border border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.04)]' : 'border border-white/5 text-neutral-500 hover:text-neutral-300 hover:border-white/10'}`}
+                            >
+                                <FileText size={15} /> Quick Draft
+                            </button>
+                            <button
+                                onClick={handleFetchAdvanced}
+                                disabled={isGeneratingAdvanced}
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${activeMode === 'advanced' ? 'bg-gradient-to-r from-lime-400/15 to-emerald-400/10 border border-lime-400/30 text-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.08)]' : 'border border-white/5 text-neutral-500 hover:text-lime-400 hover:border-lime-400/20'}`}
+                            >
+                                {isGeneratingAdvanced ? <><Loader2 size={15} className="animate-spin" /> Generating...</> : <><Sparkles size={15} /> Advanced ✨</>}
+                            </button>
+                        </div>
+
+                        {/* ─── Quick Draft Mode ─── */}
+                        {activeMode === 'quick' && (
+                            <div className="space-y-2">
+                                {quickDraftItems.map((item, i) => (
+                                    <div
+                                        key={i}
+                                        draggable
+                                        onDragStart={() => handleDragStart(i)}
+                                        onDragOver={(e) => handleDragOver(e, i)}
+                                        onDrop={() => handleDrop(i)}
+                                        onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                                        className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all duration-200 group ${dragOverIdx === i ? 'border-lime-400/40 bg-lime-400/5' : 'border-white/5 hover:border-white/15'} ${item.type === 'h3' ? 'ml-4 sm:ml-8' : ''}`}
+                                    >
+                                        <GripVertical size={14} className="text-neutral-600 group-hover:text-neutral-400 shrink-0 cursor-grab active:cursor-grabbing" />
+                                        <button
+                                            onClick={() => toggleType(i)}
+                                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shrink-0 transition-colors cursor-pointer ${item.type === 'h2' ? 'bg-blue-400/15 text-blue-400 hover:bg-blue-400/25' : 'bg-white/5 text-neutral-500 hover:bg-white/10'}`}
+                                            title="Click to toggle H2/H3"
+                                        >
+                                            {item.type}
+                                        </button>
+                                        {editingIdx === i ? (
+                                            <input
+                                                type="text"
+                                                value={editText}
+                                                onChange={(e) => setEditText(e.target.value)}
+                                                onBlur={saveEdit}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditingIdx(null); }}
+                                                autoFocus
+                                                className="flex-1 min-w-0 bg-black/40 border border-lime-400/30 rounded-lg text-xs sm:text-sm text-white px-2 sm:px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-lime-400/40"
+                                            />
+                                        ) : (
+                                            <span
+                                                onClick={() => startEdit(i)}
+                                                className="text-xs sm:text-sm text-neutral-300 font-medium flex-1 min-w-0 cursor-text hover:text-white transition-colors truncate"
+                                            >
+                                                {item.text}
+                                            </span>
+                                        )}
+                                        <button onClick={() => deleteItem(i)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-neutral-600 hover:text-red-400 hover:bg-red-400/10 transition-all" title="Delete heading">
+                                            <Trash2 size={13} />
+                                        </button>
+                                    </div>
+                                ))}
+                                <div className="flex items-center gap-2 pt-3">
+                                    <button onClick={() => addHeading('h2')} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-500 hover:text-lime-400 border border-white/5 hover:border-lime-400/20 rounded-xl transition-all">
+                                        <Plus size={13} /> Add H2
+                                    </button>
+                                    <button onClick={() => addHeading('h3')} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-500 hover:text-lime-400 border border-white/5 hover:border-lime-400/20 rounded-xl transition-all">
+                                        <Plus size={13} /> Add H3
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ─── Advanced Mode ─── */}
+                        {activeMode === 'advanced' && advancedOutline && (
+                            <div className="space-y-3">
+                                {/* Intro Hook */}
+                                <div className="bg-gradient-to-r from-lime-400/5 to-transparent border border-lime-400/10 rounded-xl p-4">
+                                    <div className="text-[10px] font-bold text-lime-400 uppercase tracking-widest mb-2">Intro Hook</div>
+                                    {editIntroHook ? (
+                                        <textarea
+                                            value={advancedOutline.introHook}
+                                            onChange={(e) => setAdvancedOutline(prev => prev ? { ...prev, introHook: e.target.value } : prev)}
+                                            onBlur={() => setEditIntroHook(false)}
+                                            autoFocus
+                                            rows={2}
+                                            className="w-full bg-black/40 border border-lime-400/30 rounded-lg text-sm text-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-400/40 resize-none"
+                                        />
+                                    ) : (
+                                        <p onClick={() => setEditIntroHook(true)} className="text-sm text-neutral-400 cursor-text hover:text-neutral-200 transition-colors italic leading-relaxed m-0">&ldquo;{advancedOutline.introHook}&rdquo;</p>
+                                    )}
+                                </div>
+
+                                {/* Sections */}
+                                {advancedOutline.sections.map((section, sIdx) => (
+                                    <div key={sIdx} className="border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors">
+                                        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white/[0.02] group">
+                                            <button onClick={() => toggleCollapse(sIdx)} className="text-neutral-500 hover:text-white transition-colors shrink-0">
+                                                {collapsedSections.has(sIdx) ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                                            </button>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 sm:px-2 py-0.5 rounded bg-blue-400/15 text-blue-400 shrink-0">H2</span>
+                                            {editingAdvanced?.sIdx === sIdx && editingAdvanced.subIdx === undefined ? (
+                                                <input
+                                                    type="text" value={editAdvancedText} onChange={(e) => setEditAdvancedText(e.target.value)}
+                                                    onBlur={saveAdvancedEdit} onKeyDown={(e) => { if (e.key === 'Enter') saveAdvancedEdit(); if (e.key === 'Escape') setEditingAdvanced(null); }}
+                                                    autoFocus className="flex-1 min-w-0 bg-black/40 border border-lime-400/30 rounded-lg text-xs sm:text-sm text-white px-2 sm:px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-lime-400/40"
+                                                />
+                                            ) : (
+                                                <span onClick={() => startAdvancedEdit(sIdx)} className="text-xs sm:text-sm text-white font-semibold flex-1 min-w-0 cursor-text hover:text-lime-400 transition-colors truncate">{section.title}</span>
+                                            )}
+                                            <button onClick={() => addAdvancedSub(sIdx)} className="opacity-0 group-hover:opacity-100 p-1. rounded-lg text-neutral-600 hover:text-lime-400 hover:bg-lime-400/10 transition-all shrink-0" title="Add H3"><Plus size={13} /></button>
+                                            <button onClick={() => deleteAdvancedSection(sIdx)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-neutral-600 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0" title="Delete"><Trash2 size={13} /></button>
+                                        </div>
+                                        {!collapsedSections.has(sIdx) && section.subsections.length > 0 && (
+                                            <div className="pl-6 sm:pl-10 pr-3 sm:pr-4 py-2 space-y-1 border-t border-white/5">
+                                                {section.subsections.map((sub, subIdx) => (
+                                                    <div key={subIdx} className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-white/[0.02] transition-colors group/sub">
+                                                        <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-white/5 text-neutral-500 shrink-0">H3</span>
+                                                        {editingAdvanced?.sIdx === sIdx && editingAdvanced.subIdx === subIdx ? (
+                                                            <input
+                                                                type="text" value={editAdvancedText} onChange={(e) => setEditAdvancedText(e.target.value)}
+                                                                onBlur={saveAdvancedEdit} onKeyDown={(e) => { if (e.key === 'Enter') saveAdvancedEdit(); if (e.key === 'Escape') setEditingAdvanced(null); }}
+                                                                autoFocus className="flex-1 min-w-0 bg-black/40 border border-lime-400/30 rounded-lg text-xs sm:text-sm text-white px-2 sm:px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-lime-400/40"
+                                                            />
+                                                        ) : (
+                                                            <span onClick={() => startAdvancedEdit(sIdx, subIdx)} className="text-xs sm:text-sm text-neutral-300 font-medium flex-1 min-w-0 cursor-text hover:text-white transition-colors truncate">{sub.title}</span>
+                                                        )}
+                                                        <button onClick={() => deleteAdvancedSub(sIdx, subIdx)} className="opacity-0 group-hover/sub:opacity-100 p-1 rounded text-neutral-600 hover:text-red-400 transition-all shrink-0"><Trash2 size={12} /></button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                <button onClick={addAdvancedSection} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-500 hover:text-lime-400 border border-white/5 hover:border-lime-400/20 rounded-xl transition-all mt-2">
+                                    <Plus size={13} /> Add H2 Section
+                                </button>
+
+                                {/* FAQ Section */}
+                                <div className="mt-4 pt-4 border-t border-white/10">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <HelpCircle size={16} className="text-lime-400" />
+                                        <span className="text-sm font-bold text-white">FAQ Section</span>
+                                        <span className="text-[10px] font-medium text-neutral-500 bg-white/5 px-2 py-0.5 rounded-full ml-auto">{advancedOutline.faq.length} questions</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {advancedOutline.faq.map((faq, fIdx) => (
+                                            <div key={fIdx} className="bg-white/[0.02] border border-white/5 rounded-xl p-3 hover:border-white/10 transition-colors group/faq">
+                                                {editingFaqIdx === fIdx ? (
+                                                    <div className="space-y-2">
+                                                        <input type="text" value={editFaqQ} onChange={(e) => setEditFaqQ(e.target.value)} placeholder="Question" className="w-full bg-black/40 border border-lime-400/30 rounded-lg text-sm text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-400/40" />
+                                                        <textarea value={editFaqA} onChange={(e) => setEditFaqA(e.target.value)} placeholder="Answer" rows={2} className="w-full bg-black/40 border border-white/10 rounded-lg text-sm text-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-400/40 resize-none" />
+                                                        <div className="flex gap-2">
+                                                            <button onClick={saveFaqEdit} className="text-xs font-bold text-lime-400 hover:text-lime-300 px-3 py-1 bg-lime-400/10 rounded-lg transition-colors">Save</button>
+                                                            <button onClick={() => setEditingFaqIdx(null)} className="text-xs font-bold text-neutral-500 hover:text-white px-3 py-1 rounded-lg transition-colors">Cancel</button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="flex-1 cursor-text" onClick={() => startFaqEdit(fIdx)}>
+                                                            <div className="text-xs font-semibold text-neutral-300 hover:text-white transition-colors">Q: {faq.q}</div>
+                                                            <div className="text-[11px] text-neutral-500 mt-1 leading-relaxed line-clamp-2">A: {faq.a}</div>
+                                                        </div>
+                                                        <button onClick={() => deleteFaq(fIdx)} className="opacity-0 group-hover/faq:opacity-100 p-1 rounded text-neutral-600 hover:text-red-400 transition-all shrink-0"><Trash2 size={12} /></button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button onClick={addFaq} className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-neutral-500 hover:text-lime-400 border border-white/5 hover:border-lime-400/20 rounded-xl transition-all">
+                                            <Plus size={13} /> Add FAQ
+                                        </button>
                                     </div>
                                 </div>
-                                <div className={`text-xs font-bold px-2 py-0.5 rounded-full ${r.score >= 90 ? 'bg-lime-400/15 text-lime-400' : r.score >= 85 ? 'bg-yellow-400/15 text-yellow-400' : 'bg-neutral-400/15 text-neutral-400'}`}>{r.score}</div>
+
+                                {/* Conclusion CTA */}
+                                <div className="bg-gradient-to-r from-emerald-400/5 to-transparent border border-emerald-400/10 rounded-xl p-4 mt-4">
+                                    <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Conclusion CTA</div>
+                                    {editConclusionCta ? (
+                                        <textarea
+                                            value={advancedOutline.conclusionCta}
+                                            onChange={(e) => setAdvancedOutline(prev => prev ? { ...prev, conclusionCta: e.target.value } : prev)}
+                                            onBlur={() => setEditConclusionCta(false)}
+                                            autoFocus rows={2}
+                                            className="w-full bg-black/40 border border-emerald-400/30 rounded-lg text-sm text-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 resize-none"
+                                        />
+                                    ) : (
+                                        <p onClick={() => setEditConclusionCta(true)} className="text-sm text-neutral-400 cursor-text hover:text-neutral-200 transition-colors italic leading-relaxed m-0">&ldquo;{advancedOutline.conclusionCta}&rdquo;</p>
+                                    )}
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                    {analysis.recommendations && (
-                        <div className="mt-4 p-3 bg-lime-400/5 border border-lime-400/10 rounded-xl text-xs text-neutral-400">
-                            <span className="text-lime-400 font-bold">Recommendation:</span> Target {analysis.recommendations.targetWordCount} words with {analysis.recommendations.targetHeadings} headings.
-                        </div>
-                    )}
-                </div>
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                    <h3 className="flex items-center gap-2 text-base font-bold text-white mb-5"><FileText size={18} className="text-lime-400" /> Smart Outline</h3>
-                    <div className="space-y-2">
-                        {analysis.outline.map((item, i) => (
-                            <div key={i} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/5 hover:border-lime-400/20 hover:bg-lime-400/[0.02] transition-all group cursor-grab ${item.type === 'h3' ? 'ml-6' : ''}`}>
-                                <GripVertical size={14} className="text-neutral-600 group-hover:text-neutral-400 shrink-0" />
-                                <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shrink-0 ${item.type === 'h2' ? 'bg-lime-400/10 text-lime-400' : 'bg-white/5 text-neutral-500'}`}>{item.type}</span>
-                                <span className="text-sm text-neutral-300 font-medium flex-1 truncate">{item.text}</span>
+                        )}
+
+                        {/* Loading state for advanced */}
+                        {activeMode === 'advanced' && !advancedOutline && isGeneratingAdvanced && (
+                            <div className="flex flex-col items-center justify-center py-16 gap-4">
+                                <Loader2 size={28} className="animate-spin text-lime-400" />
+                                <p className="text-sm text-neutral-400 font-medium">Generating LSI-optimized outline...</p>
+                                <p className="text-xs text-neutral-600">This may take 5–10 seconds</p>
                             </div>
-                        ))}
+                        )}
+
+                        {/* Empty state */}
+                        {activeMode === 'advanced' && !advancedOutline && !isGeneratingAdvanced && (
+                            <div className="flex flex-col items-center justify-center py-16 gap-4">
+                                <Sparkles size={28} className="text-neutral-600" />
+                                <p className="text-sm text-neutral-500">Click &ldquo;Advanced ✨&rdquo; above to generate an LSI-powered outline</p>
+                            </div>
+                        )}
                     </div>
+
+                    {/* SEO Meta Preview */}
                     {analysis.meta && (
-                        <div className="mt-6 p-4 bg-black/30 rounded-xl border border-white/5">
+                        <div className="bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                             <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-3">Auto-Generated SEO Meta</div>
                             <div className="text-blue-400 text-base font-medium mb-1 truncate">{analysis.meta.title}</div>
                             {analysis.meta.slug && <div className="text-lime-500 text-xs mb-1">https://www.pekkerai.com › blog › {analysis.meta.slug}</div>}
                             <div className="text-neutral-400 text-xs leading-relaxed">{analysis.meta.description}</div>
                         </div>
                     )}
+                </div>
+
+                {/* ─── Sidebar ─── */}
+                <div className="space-y-4 sm:space-y-6">
+                    {/* Recommendations Card */}
+                    <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-white mb-4"><Zap size={14} className="text-lime-400" /> Recommendations</h3>
+                        <div className="space-y-3 text-xs">
+                            <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                                <span className="text-neutral-400">Target Word Count</span>
+                                <span className="font-bold text-neutral-300">{analysis.recommendations?.targetWordCount || '—'}</span>
+                            </div>
+                            <div className="flex items-center justify-between py-1.5 border-b border-white/5">
+                                <span className="text-neutral-400">Target Headings</span>
+                                <span className="font-bold text-neutral-300">{analysis.recommendations?.targetHeadings || '—'}</span>
+                            </div>
+                            <div className="flex items-center justify-between py-1.5">
+                                <span className="text-neutral-400">Current Headings</span>
+                                <span className={`font-bold ${headingColor}`}>{currentHeadingCount}</span>
+                            </div>
+                            <div className={`mt-2 p-2.5 rounded-lg text-[11px] font-medium ${headingInRange ? 'bg-lime-400/5 border border-lime-400/10 text-lime-400' : 'bg-yellow-400/5 border border-yellow-400/10 text-yellow-400'}`}>
+                                {headingInRange ? '✓ Heading count is within the recommended range' : `⚠ Aim for ${targetHeadingsStr} headings`}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* LSI Keywords Sidebar */}
+                    {lsiKeywords.length > 0 && (
+                        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Hash size={14} className="text-lime-400" />
+                                <h3 className="text-sm font-bold text-white">LSI Keywords</h3>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto ${lsiPercentage >= 70 ? 'bg-lime-400/10 text-lime-400' : lsiPercentage >= 50 ? 'bg-yellow-400/10 text-yellow-400' : 'bg-red-400/10 text-red-400'}`}>
+                                    {coveredLsi.length}/{lsiKeywords.length}
+                                </span>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="w-full h-1.5 bg-white/5 rounded-full mb-4 overflow-hidden">
+                                <div className={`h-full rounded-full transition-all duration-500 ${lsiBgColor}`} style={{ width: `${lsiPercentage}%` }} />
+                            </div>
+                            <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1 custom-scrollbar">
+                                {lsiKeywords.map((kw, i) => {
+                                    const isCovered = allHeadingTexts.some(t => t.includes(kw.toLowerCase()));
+                                    return (
+                                        <div key={i} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${isCovered ? 'bg-lime-400/5 text-lime-400' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${isCovered ? 'border-lime-400/40 bg-lime-400/20' : 'border-white/10'}`}>
+                                                {isCovered && <Check size={9} className="text-lime-400" />}
+                                            </div>
+                                            <span className="truncate font-medium">{kw}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SERP Competitors Sidebar */}
+                    <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-white mb-4"><BarChart3 size={14} className="text-lime-400" /> SERP Competitors</h3>
+                        <div className="space-y-2">
+                            {analysis.serpResults.slice(0, 5).map((r) => {
+                                let domain = '';
+                                try { domain = new URL(r.url).hostname.replace('www.', ''); } catch { domain = r.url; }
+                                return (
+                                    <a key={r.position} href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 p-2.5 rounded-xl border border-white/5 hover:border-white/15 hover:bg-white/[0.02] transition-all group/serp">
+                                        <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-neutral-400 shrink-0">{r.position}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-xs font-semibold text-neutral-300 truncate group-hover/serp:text-lime-400 transition-colors">{r.title}</div>
+                                            <div className="text-[10px] text-neutral-600 truncate">{domain}</div>
+                                        </div>
+                                        <ExternalLink size={11} className="text-neutral-600 group-hover/serp:text-neutral-400 shrink-0" />
+                                    </a>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

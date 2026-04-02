@@ -84,6 +84,12 @@ export const articleApi = {
             body: JSON.stringify(data),
         }),
 
+    outline: (data: { articleId: number | string; keyword: string; lsiKeywords: string[]; serpResults: SerpResult[] }) =>
+        apiFetch<AdvancedOutlineResponse>('/api/articles/outline', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
     generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; targetWordCount?: number; articleId?: string }) =>
         apiFetch<GenerateResponse>('/api/articles/generate', {
             method: 'POST',
@@ -210,7 +216,27 @@ export interface AnalyzeResponse {
     outline: OutlineItem[];
     meta: ArticleMeta;
     recommendations: { targetWordCount: string; targetHeadings: string };
+    lsiKeywords?: string[];
     targetWordCount?: number;
+}
+
+export interface AdvancedOutlineSection {
+    type: 'H2';
+    title: string;
+    subsections: { type: 'H3'; title: string }[];
+}
+
+export interface AdvancedOutline {
+    sections: AdvancedOutlineSection[];
+    faq: { q: string; a: string }[];
+    introHook: string;
+    conclusionCta: string;
+}
+
+export interface AdvancedOutlineResponse {
+    articleId: number | string;
+    outline: AdvancedOutline;
+    lsiKeywordsCovered: string[];
 }
 
 export interface GenerateResponse {

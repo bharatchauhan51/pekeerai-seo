@@ -479,9 +479,14 @@ export default function App() {
                     {link.label}
                   </a>
                 ))}
-                <button onClick={() => { openModal(); setMobileMenuOpen(false); }} className="mt-2 w-full py-3 bg-lime-400 hover:bg-lime-300 text-black font-semibold rounded-full transition-all active:scale-95">
-                  Get Early Access
-                </button>
+                <div className="border-t border-white/5 mt-2 pt-3 flex flex-col gap-2">
+                  <a href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full py-3 text-center border border-white/10 hover:border-white/20 text-white font-semibold rounded-full transition-all active:scale-95">
+                    Log In
+                  </a>
+                  <button onClick={() => { openModal(); setMobileMenuOpen(false); }} className="w-full py-3 bg-lime-400 hover:bg-lime-300 text-black font-semibold rounded-full transition-all active:scale-95">
+                    Get Early Access
+                  </button>
+                </div>
               </div>
             </div>
           )}
