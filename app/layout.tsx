@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./context/AuthContext";
 import PageViewTracker from "./components/PageViewTracker";
 
 const geistSans = Geist({
@@ -67,9 +68,12 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <PageViewTracker />
-        {children}
+        <AuthProvider>
+          <PageViewTracker />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
