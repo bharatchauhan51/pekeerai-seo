@@ -49,7 +49,7 @@ export async function apiFetch<T>(
 // ─── Auth APIs ───
 export const authApi = {
     register: (name: string, email: string, password: string) =>
-        apiFetch<{ user: ApiUser; token: string }>('/api/auth/register', {
+        apiFetch<{ message: string; email: string }>('/api/auth/register', {
             method: 'POST',
             body: JSON.stringify({ name, email, password }),
         }),
@@ -74,6 +74,18 @@ export const authApi = {
 
     deleteAccount: () =>
         apiFetch('/api/auth/account', { method: 'DELETE' }),
+
+    resendVerification: (email: string) =>
+        apiFetch<{ message: string }>('/api/auth/resend-verification', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        }),
+
+    verifyEmail: (token: string) =>
+        apiFetch<{ message: string }>('/api/auth/verify-email', {
+            method: 'POST',
+            body: JSON.stringify({ token }),
+        }),
 };
 
 // ─── Article APIs ───

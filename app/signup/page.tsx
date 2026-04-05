@@ -57,7 +57,7 @@ export default function SignupPage() {
         setIsLoading(false);
 
         if (result.success) {
-            router.push('/dashboard');
+            router.push(`/check-email?email=${encodeURIComponent(email)}`);
         } else {
             setError(result.error || 'Registration failed. Please try again.');
         }

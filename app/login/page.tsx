@@ -1,19 +1,38 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, FormEvent, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Sparkles, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Sparkles, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../lib/api';
 
 export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+                <Loader2 className="animate-spin text-lime-400" size={32} />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
+    );
+}
+
+function LoginContent() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [needsVerification, setNeedsVerification] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+    const [resendMessage, setResendMessage] = useState('');
+    const [banner, setBanner] = useState<string | null>(null);
+    const [cooldown, setCooldown] = useState(0);
     const { login, isLoggedIn, isLoading: authLoading } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         if (!authLoading && isLoggedIn) {
@@ -21,9 +40,51 @@ export default function LoginPage() {
         }
     }, [isLoggedIn, authLoading, router]);
 
+    useEffect(() => {
+        if (cooldown <= 0) return;
+        const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [cooldown]);
+
+    const formatCooldown = useCallback((s: number) => {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${m}:${sec.toString().padStart(2, '0')}`;
+    }, []);
+
+    // Read verification query params from email redirect
+    useEffect(() => {
+        if (searchParams.get('verified') === 'true') {
+            setBanner('Email verified! You can now log in.');
+        }
+    }, [searchParams]);
+
+    const handleResend = async () => {
+        if (!email || cooldown > 0) {
+            if (!email) setError('Please enter your email address to resend verification.');
+            return;
+        }
+        setIsResending(true);
+        setResendMessage('');
+        const { error: resendError, status } = await authApi.resendVerification(email);
+        setIsResending(false);
+        if (status === 429) {
+            setResendMessage('Too many attempts. Please try again later.');
+        } else if (resendError) {
+            setResendMessage(resendError);
+        } else {
+            setResendMessage('Verification email sent. Check your inbox.');
+            setCooldown(120);
+        }
+    };
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
+        setNeedsVerification(false);
+        setResendMessage('');
+        setBanner(null);
+
         if (!email || !password) {
             setError('Please enter both email and password.');
             return;
@@ -33,6 +94,9 @@ export default function LoginPage() {
         setIsLoading(false);
         if (result.success) {
             router.push('/dashboard');
+        } else if (result.code === 'EMAIL_NOT_VERIFIED') {
+            setNeedsVerification(true);
+            setError('Please verify your email address before logging in.');
         } else {
             setError(result.error || 'Invalid credentials. Please try again.');
         }
@@ -68,6 +132,14 @@ export default function LoginPage() {
                         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Welcome <span className="text-lime-400">Back</span></h1>
                         <p className="text-neutral-400">Log in to your PekkerAI dashboard to continue creating SEO-optimized content.</p>
                     </div>
+
+                    {/* Verification success banner */}
+                    {banner && (
+                        <div className="flex items-center gap-3 rounded-xl px-5 py-4 mb-4 text-sm font-medium bg-lime-400/10 text-lime-400 border border-lime-400/20">
+                            <CheckCircle size={18} />
+                            {banner}
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 space-y-5">
                         {/* Email */}
@@ -114,6 +186,29 @@ export default function LoginPage() {
 
                         {/* Error */}
                         {error && <p className="text-red-400 text-sm font-medium">{error}</p>}
+
+                        {/* Resend verification */}
+                        {needsVerification && (
+                            <div className="space-y-2">
+                                <button
+                                    type="button"
+                                    onClick={handleResend}
+                                    disabled={isResending || cooldown > 0}
+                                    className="w-full py-3 bg-white/5 hover:bg-white/10 disabled:opacity-60 disabled:cursor-not-allowed border border-white/10 text-white font-semibold rounded-full transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                                >
+                                    {isResending ? (
+                                        <><Loader2 size={14} className="animate-spin" /> Sending...</>
+                                    ) : cooldown > 0 ? (
+                                        <>Resend in {formatCooldown(cooldown)}</>
+                                    ) : (
+                                        <>Resend Verification Email</>
+                                    )}
+                                </button>
+                                {resendMessage && (
+                                    <p className="text-lime-400 text-xs text-center">{resendMessage}</p>
+                                )}
+                            </div>
+                        )}
 
                         {/* Submit */}
                         <button
