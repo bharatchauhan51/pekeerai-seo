@@ -16,8 +16,8 @@ interface AuthContextType {
     user: User | null;
     isLoggedIn: boolean;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; error?: string; code?: string }>;
+    register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string; email?: string }>;
     logout: () => void;
     refreshUser: () => Promise<void>;
 }
@@ -67,8 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-        const { data, error } = await authApi.login(email, password);
+    const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; code?: string }> => {
+        const { data, error, status } = await authApi.login(email, password);
+        if (status === 403 && error) {
+            return { success: false, error, code: 'EMAIL_NOT_VERIFIED' };
+        }
         if (error || !data) {
             return { success: false, error: error || 'Login failed. Please try again.' };
         }
@@ -77,14 +80,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
     };
 
-    const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string; email?: string }> => {
         const { data, error } = await authApi.register(name, email, password);
         if (error || !data) {
             return { success: false, error: error || 'Registration failed. Please try again.' };
         }
-        localStorage.setItem('pekkerai_token', data.token);
-        setUser(apiUserToUser(data.user));
-        return { success: true };
+        return { success: true, email: data.email };
     };
 
     const logout = async () => {
