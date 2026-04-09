@@ -353,7 +353,7 @@ export default function BlogPost() {
                         {/* Section 6 — Frase */}
                         <h2 id="frase" className="text-2xl font-bold text-white mt-12 mb-6">6. #4 Frase — Best for Research-Heavy Content</h2>
                         <p>
-                            Frase shines when you need deep topical research before writing. It pulls SERP data, extracts key topics from top-ranking articles, and generates content briefs that rival what a senior SEO strategist would produce. The AI writing add-on lets you draft directly in the platform, though the per-article economics get expensive fast.
+                            Frase shines when you need deep topical research before writing. It pulls SERP data, extracts key topics from top-ranking articles, and generates content briefs that rival what a senior SEO strategist would produce. The AI writing add-on lets you draft directly in the platform, though the per-article economics get expensive fast. If you're deciding exclusively between these two legacy platforms, see our complete <Link href="/blog/surfer-seo-vs-frase" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">Surfer SEO vs Frase comparison</Link> for solo founders.
                         </p>
 
                         <div className="grid sm:grid-cols-2 gap-4 my-8">

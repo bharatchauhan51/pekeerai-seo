@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'surfer-seo-vs-frase',
+        title: 'Surfer SEO vs Frase: Which Is Better for Solo Founders?',
+        description: "Surfer SEO or Frase? We compare pricing, content research, and AI writing to help solo founders and bootstrapped SaaS startups choose the best SEO tool.",
+        date: 'April 2026',
+        category: 'Comparison',
+    },
+    {
         slug: 'saas-founder-content-strategy',
         title: 'Solo SaaS Founder Content Strategy: How to Rank Without a Marketing Team',
         description: "You don't need a marketing team to dominate Google. The lean content playbook with a 12-week calendar, AI workflows, and a $12/month budget.",
