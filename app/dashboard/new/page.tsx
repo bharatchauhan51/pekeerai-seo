@@ -14,7 +14,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
     articleApi, billingApi,
     SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail,
-    SubscriptionResponse, PlanItem, AdvancedOutline, AdvancedOutlineResponse
+    SubscriptionResponse, PlanItem, AdvancedOutline, AdvancedOutlineResponse,
+    StreamEvent
 } from '../../lib/api';
 import CustomDropdown from '../../components/CustomDropdown';
 
@@ -86,12 +87,13 @@ function StepIndicator({ currentStep, onStepClick, lockedSteps = [] }: { current
 // ─── Step 1: Keyword Input ───
 function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
     onNext: () => void;
-    onAnalysisComplete: (data: AnalysisData, keyword: string, tone: string, pov: string, targetWordCount?: number) => void;
+    onAnalysisComplete: (data: AnalysisData, keyword: string, tone: string, pov: string, targetWordCount?: number, audience?: string) => void;
     onLimitReached: () => void;
 }) {
     const [keyword, setKeyword] = useState('');
     const [tone, setTone] = useState('Professional & Direct');
     const [pov, setPov] = useState('Second Person (You/Your)');
+    const [audience, setAudience] = useState('');
     const [targetWordCount, setTargetWordCount] = useState<string>('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState('');
@@ -117,6 +119,7 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
             tone,
             pointOfView: pov,
             targetWordCount: targetWordCount ? parseInt(targetWordCount) : undefined,
+            audience: audience.trim() || undefined,
         });
 
         setIsAnalyzing(false);
@@ -129,7 +132,7 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
         if (data) {
             data.targetWordCount = targetWordCount ? parseInt(targetWordCount) : undefined;
         }
-        onAnalysisComplete(data, keyword.trim(), tone, pov, targetWordCount ? parseInt(targetWordCount) : undefined);
+        onAnalysisComplete(data, keyword.trim(), tone, pov, targetWordCount ? parseInt(targetWordCount) : undefined, audience.trim() || undefined);
         onNext();
     };
 
@@ -150,7 +153,7 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
                     />
                 </div>
             </div>
-            <div className="grid lg:grid-cols-3 sm:grid-cols-2 gap-5 mb-10">
+            <div className="grid lg:grid-cols-4 sm:grid-cols-2 gap-5 mb-10">
                 <CustomDropdown
                     label="Tone"
                     icon={<Mic2 size={13} className="text-lime-400/70" />}
@@ -172,6 +175,22 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
                         { label: 'Second Person (You/Your)', value: 'Second Person (You/Your)' },
                         { label: 'First Person (I/We)', value: 'First Person (I/We)' },
                         { label: 'Third Person (They/The)', value: 'Third Person (They/The)' }
+                    ]}
+                />
+                <CustomDropdown
+                    label="Target Audience"
+                    icon={<Tag size={13} className="text-lime-400/70" />}
+                    value={audience}
+                    onChange={setAudience}
+                    options={[
+                        { label: 'Small Business Owners', value: 'Small Business Owners' },
+                        { label: 'Marketing Professionals', value: 'Marketing Professionals' },
+                        { label: 'Developers & Engineers', value: 'Developers & Engineers' },
+                        { label: 'Content Creators', value: 'Content Creators' },
+                        { label: 'Enterprise Decision Makers', value: 'Enterprise Decision Makers' },
+                        { label: 'Beginners / General Public', value: 'Beginners / General Public' },
+                        { label: 'E-commerce Store Owners', value: 'E-commerce Store Owners' },
+                        { label: 'Startup Founders', value: 'Startup Founders' }
                     ]}
                 />
                 <div className="group">
@@ -201,15 +220,18 @@ function Step1({ onNext, onAnalysisComplete, onLimitReached }: {
 }
 
 // ─── Step 2: Outline Editor ───
-function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, onGenerationComplete }: {
+function Step2({ onNext, onBack, analysis, keyword, tone, pov, audience, targetWordCount, onGenerationComplete, onStreamingUpdate }: {
     onNext: () => void; onBack: () => void;
     analysis: AnalysisData | null;
-    keyword: string; tone: string; pov: string;
+    keyword: string; tone: string; pov: string; audience?: string;
     targetWordCount?: number;
     onGenerationComplete: (data: GenerationData) => void;
+    onStreamingUpdate?: (html: string, isStreaming: boolean) => void;
 }) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState('');
+    const [streamProgress, setStreamProgress] = useState<{ wordCount: number } | null>(null);
+    const abortReaderRef = { current: null as ReadableStreamDefaultReader<Uint8Array> | null };
 
     // Outline state
     const [activeMode, setActiveMode] = useState<'quick' | 'advanced'>('quick');
@@ -290,13 +312,14 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, 
         setActiveMode('advanced');
     };
 
-    // Generate article
+    // Generate article via SSE streaming (with fallback to non-streaming)
     const handleGenerate = async () => {
         if (!analysis) return;
         setError('');
         setIsGenerating(true);
+        setStreamProgress(null);
 
-        // Build the flat outline to send to generate API
+        // Build the flat outline to send
         let outlineToSend: OutlineItem[] = [];
         if (activeMode === 'quick') {
             outlineToSend = quickDraftItems;
@@ -307,20 +330,143 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, 
             ]);
         }
 
-        const { data, error: apiError } = await articleApi.generate({
+        const payload = {
             keyword,
             outline: outlineToSend,
             meta: analysis.meta,
             tone,
             pointOfView: pov,
+            audience: audience || undefined,
             targetWordCount: targetWordCount || (analysis.targetWordCount ? analysis.targetWordCount : undefined),
             ...(analysis.articleId ? { articleId: analysis.articleId } : {}),
-        });
+        };
 
+        try {
+            // Attempt SSE streaming
+            const response = await articleApi.generateStream(payload);
+
+            if (!response.ok || !response.body) {
+                // Fallback to non-streaming
+                console.warn('Streaming not available, falling back to non-streaming endpoint');
+                const { data, error: apiError } = await articleApi.generate(payload);
+                setIsGenerating(false);
+                setStreamProgress(null);
+                if (apiError || !data) { setError(apiError || 'Generation failed. Please try again.'); return; }
+                onGenerationComplete(data);
+                onNext();
+                return;
+            }
+
+            const reader = response.body.getReader();
+            abortReaderRef.current = reader;
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let htmlAccumulator = '';
+            let receivedArticleId = '';
+            let streamTimedOut = false;
+
+            // 60s timeout
+            const timeoutId = setTimeout(() => {
+                streamTimedOut = true;
+                reader.cancel();
+            }, 120000);
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data: ')) continue;
+
+                    try {
+                        const data = JSON.parse(trimmed.slice(6)) as StreamEvent;
+
+                        switch (data.type) {
+                            case 'meta':
+                                receivedArticleId = String(data.articleId);
+                                break;
+                            case 'chunk':
+                                htmlAccumulator += data.content;
+                                // Live word count
+                                const wc = htmlAccumulator.replace(/<[^>]*>?/gm, ' ').trim().split(/\s+/).filter(w => w.length > 0).length;
+                                setStreamProgress({ wordCount: wc });
+                                // Notify parent for real-time rendering
+                                if (onStreamingUpdate) onStreamingUpdate(htmlAccumulator, true);
+                                break;
+                            case 'error':
+                                setError(data.message);
+                                break;
+                            case 'done':
+                                clearTimeout(timeoutId);
+                                setIsGenerating(false);
+                                setStreamProgress(null);
+                                onGenerationComplete({
+                                    articleId: String(data.articleId),
+                                    html: htmlAccumulator,
+                                    faqs: data.faqs,
+                                    seoScore: data.seoScore,
+                                    stats: data.stats,
+                                });
+                                if (onStreamingUpdate) onStreamingUpdate(htmlAccumulator, false);
+                                onNext();
+                                return;
+                        }
+                    } catch {
+                        // Skip malformed lines
+                    }
+                }
+            }
+
+            clearTimeout(timeoutId);
+
+            // If stream ended without a `done` event
+            if (streamTimedOut) {
+                setError('Generation may not have completed. Refresh to check.');
+            } else if (htmlAccumulator && !error) {
+                // Stream finished naturally (no done event but content received)
+                onGenerationComplete({
+                    articleId: receivedArticleId || analysis.articleId || '',
+                    html: htmlAccumulator,
+                    faqs: [],
+                    seoScore: { overall: 0, metrics: {} as SeoScoreMetrics },
+                    stats: { wordCount: htmlAccumulator.replace(/<[^>]*>?/gm, ' ').trim().split(/\s+/).length, readTime: '0 min' },
+                });
+                if (onStreamingUpdate) onStreamingUpdate(htmlAccumulator, false);
+                onNext();
+            }
+
+            setIsGenerating(false);
+            setStreamProgress(null);
+        } catch (networkErr) {
+            // Network error — try fallback
+            console.warn('SSE stream failed, falling back:', networkErr);
+            try {
+                const { data, error: apiError } = await articleApi.generate(payload);
+                setIsGenerating(false);
+                setStreamProgress(null);
+                if (apiError || !data) { setError(apiError || 'Generation failed. Please try again.'); return; }
+                onGenerationComplete(data);
+                onNext();
+            } catch {
+                setIsGenerating(false);
+                setStreamProgress(null);
+                setError('Generation failed. Please check your connection and try again.');
+            }
+        }
+    };
+
+    const handleStopGeneration = () => {
+        if (abortReaderRef.current) {
+            abortReaderRef.current.cancel();
+            abortReaderRef.current = null;
+        }
         setIsGenerating(false);
-        if (apiError || !data) { setError(apiError || 'Generation failed. Please try again.'); return; }
-        onGenerationComplete(data);
-        onNext();
+        setStreamProgress(null);
     };
 
     // ─── Quick Draft helpers ───
@@ -437,10 +583,24 @@ function Step2({ onNext, onBack, analysis, keyword, tone, pov, targetWordCount, 
 
             {/* Action Buttons */}
             <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
-                <button onClick={onBack} className="flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-semibold rounded-full transition-all text-sm"><ChevronLeft size={16} /> Back</button>
-                <button onClick={handleGenerate} disabled={isGenerating} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 text-sm">
-                    {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Generating...</> : <>Generate Article <ArrowRight size={16} /></>}
-                </button>
+                <button onClick={onBack} disabled={isGenerating} className="flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-semibold rounded-full transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"><ChevronLeft size={16} /> Back</button>
+                <div className="flex items-center gap-3">
+                    {isGenerating && streamProgress && (
+                        <div className="flex items-center gap-2 text-xs text-neutral-400">
+                            <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
+                            <span className="font-semibold text-lime-400">{streamProgress.wordCount}</span> words generated
+                        </div>
+                    )}
+                    {isGenerating ? (
+                        <button onClick={handleStopGeneration} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500/20 border border-red-500/40 hover:bg-red-500/30 text-red-400 font-bold rounded-full transition-all active:scale-95 text-sm">
+                            <X size={16} /> Stop Generation
+                        </button>
+                    ) : (
+                        <button onClick={handleGenerate} disabled={isGenerating} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 text-sm">
+                            Generate Article <ArrowRight size={16} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
@@ -1377,6 +1537,7 @@ function NewArticlePageInner() {
     const [keyword, setKeyword] = useState('');
     const [tone, setTone] = useState('');
     const [pov, setPov] = useState('');
+    const [audience, setAudience] = useState<string | undefined>(undefined);
     const [targetWordCount, setTargetWordCount] = useState<number | undefined>(undefined);
 
     // Subscription & Modal states
@@ -1524,12 +1685,13 @@ function NewArticlePageInner() {
                     <Step1
                         onNext={() => setCurrentStep(2)}
                         onLimitReached={() => setShowUpgradeModal(true)}
-                        onAnalysisComplete={(data, kw, t, p, twc) => {
+                        onAnalysisComplete={(data, kw, t, p, twc, aud) => {
                             setAnalysisData(data);
                             setKeyword(kw);
                             setTone(t);
                             setPov(p);
                             setTargetWordCount(twc);
+                            setAudience(aud);
                         }}
                     />
                 )}
@@ -1541,6 +1703,7 @@ function NewArticlePageInner() {
                         keyword={keyword}
                         tone={tone}
                         pov={pov}
+                        audience={audience}
                         targetWordCount={targetWordCount}
                         onGenerationComplete={(data) => setGenerationData(data)}
                     />

@@ -90,7 +90,7 @@ export const authApi = {
 
 // ─── Article APIs ───
 export const articleApi = {
-    analyze: (data: { keyword: string; tone: string; pointOfView: string; targetWordCount?: number; competitorUrl?: string }) =>
+    analyze: (data: { keyword: string; tone: string; pointOfView: string; targetWordCount?: number; competitorUrl?: string; audience?: string }) =>
         apiFetch<AnalyzeResponse>('/api/articles/analyze', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -102,11 +102,22 @@ export const articleApi = {
             body: JSON.stringify(data),
         }),
 
-    generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; targetWordCount?: number; articleId?: string }) =>
+    generate: (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; targetWordCount?: number; articleId?: string; audience?: string }) =>
         apiFetch<GenerateResponse>('/api/articles/generate', {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+
+    generateStream: async (data: { keyword: string; outline: OutlineItem[]; meta: ArticleMeta; tone: string; pointOfView: string; targetWordCount?: number; articleId?: string; audience?: string }): Promise<Response> => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('pekkerai_token') : null;
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        return fetch(`${API_BASE}/api/articles/generate/stream`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data),
+        });
+    },
 
     refine: (articleId: string | number, data: { instruction: string; currentHtml: string }) =>
         apiFetch<RefineResponse>(`/api/articles/${articleId}/refine`, {
@@ -230,6 +241,7 @@ export interface AnalyzeResponse {
     recommendations: { targetWordCount: string; targetHeadings: string };
     lsiKeywords?: string[];
     targetWordCount?: number;
+    audience?: string;
 }
 
 export interface AdvancedOutlineSection {
@@ -306,7 +318,36 @@ export interface ArticleDetail {
     stats: { wordCount: number; readTime: string };
     publishedAt?: string;
     keyword?: string;
+    audience?: string;
+    tone?: string;
+    pointOfView?: string;
 }
+
+// SSE streaming event types
+export interface StreamMetaEvent {
+    type: 'meta';
+    articleId: number;
+}
+
+export interface StreamChunkEvent {
+    type: 'chunk';
+    content: string;
+}
+
+export interface StreamErrorEvent {
+    type: 'error';
+    message: string;
+}
+
+export interface StreamDoneEvent {
+    type: 'done';
+    articleId: number;
+    faqs: FaqItem[];
+    seoScore: { overall: number; metrics: SeoScoreMetrics };
+    stats: { wordCount: number; readTime: string };
+}
+
+export type StreamEvent = StreamMetaEvent | StreamChunkEvent | StreamErrorEvent | StreamDoneEvent;
 
 export interface DashboardStats {
     totalArticles: { value: number; change: string };

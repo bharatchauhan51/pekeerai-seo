@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'seo-freelancer-scaling-playbook',
+        title: 'SEO Freelancer Scaling Playbook: How to Manage 10 Clients Without Hiring',
+        description: "Learn how to scale your SEO freelancer business to 10+ clients without hiring. Systemise keyword research, use AI for first drafts, and price per article — not per hour.",
+        date: 'April 2026',
+        category: 'Guide',
+    },
+    {
         slug: 'surfer-seo-vs-frase',
         title: 'Surfer SEO vs Frase: Which Is Better for Solo Founders?',
         description: "Surfer SEO or Frase? We compare pricing, content research, and AI writing to help solo founders and bootstrapped SaaS startups choose the best SEO tool.",
