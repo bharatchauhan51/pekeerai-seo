@@ -41,7 +41,7 @@ export default function WebhooksPage() {
         const fetchData = async () => {
             setDataLoading(true);
             const { data } = await webhookApi.list();
-            if (data) setWebhooks(data.webhooks);
+            if (data) setWebhooks((data.webhooks ?? []).filter(Boolean));
             setDataLoading(false);
         };
         fetchData();
@@ -54,14 +54,14 @@ export default function WebhooksPage() {
             const { data, error } = await webhookApi.update(editingWebhook.id, formData);
             setIsSaving(false);
             if (error) return { success: false, error };
-            if (data) {
+            if (data?.webhook) {
                 setWebhooks(prev => prev.map(w => w.id === editingWebhook.id ? data.webhook : w));
             }
         } else {
             const { data, error } = await webhookApi.create(formData);
             setIsSaving(false);
             if (error) return { success: false, error };
-            if (data) {
+            if (data?.webhook) {
                 setWebhooks(prev => [...prev, data.webhook]);
             }
         }
