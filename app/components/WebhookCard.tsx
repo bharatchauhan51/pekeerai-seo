@@ -42,7 +42,7 @@ function HistoryPanel({ webhookId }: { webhookId: number }) {
         if (loaded) return;
         setLoading(true);
         const { data } = await webhookApi.history(webhookId, { limit: 20 });
-        if (data) setItems(data.history);
+        if (data) setItems(Array.isArray(data.history) ? data.history.filter(Boolean) : []);
         setLoading(false);
         setLoaded(true);
     };

@@ -36,37 +36,39 @@ export default function WebhooksPage() {
     }, [isLoggedIn, isLoading, router]);
 
     // Fetch webhooks
+    const fetchWebhooks = async (showLoader = true) => {
+        if (showLoader) setDataLoading(true);
+        const { data } = await webhookApi.list();
+        if (data) setWebhooks(
+            Array.isArray(data.webhooks)
+                ? (data.webhooks as (WebhookConfig | null | undefined)[]).filter((w): w is WebhookConfig => !!w && typeof w === 'object' && 'id' in w)
+                : []
+        );
+        if (showLoader) setDataLoading(false);
+    };
+
     useEffect(() => {
         if (!isLoggedIn) return;
-        const fetchData = async () => {
-            setDataLoading(true);
-            const { data } = await webhookApi.list();
-            if (data) setWebhooks((data.webhooks ?? []).filter(Boolean));
-            setDataLoading(false);
-        };
-        fetchData();
+        fetchWebhooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoggedIn]);
 
     // Create / Update webhook
     const handleSubmit = async (formData: WebhookCreateData): Promise<{ success: boolean; error?: string }> => {
         setIsSaving(true);
+        let error: string | undefined;
         if (editingWebhook) {
-            const { data, error } = await webhookApi.update(editingWebhook.id, formData);
-            setIsSaving(false);
-            if (error) return { success: false, error };
-            if (data?.webhook) {
-                setWebhooks(prev => prev.map(w => w.id === editingWebhook.id ? data.webhook : w));
-            }
+            const result = await webhookApi.update(editingWebhook.id, formData);
+            error = result.error;
         } else {
-            const { data, error } = await webhookApi.create(formData);
-            setIsSaving(false);
-            if (error) return { success: false, error };
-            if (data?.webhook) {
-                setWebhooks(prev => [...prev, data.webhook]);
-            }
+            const result = await webhookApi.create(formData);
+            error = result.error;
         }
+        setIsSaving(false);
+        if (error) return { success: false, error };
         setShowForm(false);
         setEditingWebhook(null);
+        await fetchWebhooks(false);
         return { success: true };
     };
 
@@ -74,7 +76,7 @@ export default function WebhooksPage() {
     const handleDelete = async (webhook: WebhookConfig) => {
         const { error } = await webhookApi.delete(webhook.id);
         if (!error) {
-            setWebhooks(prev => prev.filter(w => w.id !== webhook.id));
+            setWebhooks(prev => prev.filter(w => w && w.id !== webhook.id));
         }
     };
 
@@ -82,9 +84,8 @@ export default function WebhooksPage() {
     const handleTest = async (webhookId: number): Promise<WebhookTestResult | null> => {
         const { data } = await webhookApi.test(webhookId);
         if (data) {
-            // Update the webhook's test status in state
             setWebhooks(prev => prev.map(w => {
-                if (w.id !== webhookId) return w;
+                if (!w || w.id !== webhookId) return w;
                 return {
                     ...w,
                     lastTestedAt: new Date().toISOString(),
@@ -92,7 +93,7 @@ export default function WebhooksPage() {
                 };
             }));
         }
-        return data || null;
+        return data ?? null;
     };
 
     // Edit
