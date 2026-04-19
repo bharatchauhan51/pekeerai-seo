@@ -131,10 +131,24 @@ export const articleApi = {
             body: JSON.stringify(data),
         }),
 
-    schedule: (articleId: string | number, data: { title: string; publishDate: string; cmsDestination: string; status: string }) =>
-        apiFetch<{ articleId: string; status: string; publishDate: string }>(`/api/articles/${articleId}/schedule`, {
+    schedule: (articleId: string | number, data: ScheduleArticleData) =>
+        apiFetch<ScheduleResponse>(`/api/articles/${articleId}/schedule`, {
             method: 'POST',
             body: JSON.stringify(data),
+        }),
+
+    cancelSchedule: (articleId: string | number) =>
+        apiFetch<{ articleId: string; status: string; message: string }>(`/api/articles/${articleId}/schedule`, {
+            method: 'DELETE',
+        }),
+
+    deliveries: (articleId: string | number) =>
+        apiFetch<{ deliveries: DeliveryLogItem[] }>(`/api/articles/${articleId}/deliveries`),
+
+    deliverNow: (articleId: string | number, webhookId: number) =>
+        apiFetch<ScheduleResponse>(`/api/articles/${articleId}/deliver-now`, {
+            method: 'POST',
+            body: JSON.stringify({ webhookId }),
         }),
 
     list: (params?: { status?: string; sort?: string; limit?: number; page?: number }) => {
@@ -192,6 +206,39 @@ export const billingApi = {
         apiFetch<Blob>('/api/billing/invoices/export'),
 };
 
+
+// ─── Webhook APIs ───
+export const webhookApi = {
+    list: () =>
+        apiFetch<{ webhooks: WebhookConfig[] }>('/api/webhooks'),
+
+    create: (data: WebhookCreateData) =>
+        apiFetch<{ webhook: WebhookConfig }>('/api/webhooks', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    update: (id: number, data: Partial<WebhookCreateData>) =>
+        apiFetch<{ webhook: WebhookConfig }>(`/api/webhooks/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        }),
+
+    delete: (id: number) =>
+        apiFetch(`/api/webhooks/${id}`, { method: 'DELETE' }),
+
+    test: (id: number) =>
+        apiFetch<WebhookTestResult>(`/api/webhooks/${id}/test`, {
+            method: 'POST',
+        }),
+
+    history: (id: number, params?: { limit?: number; page?: number }) => {
+        const query = new URLSearchParams();
+        if (params?.limit) query.set('limit', String(params.limit));
+        if (params?.page) query.set('page', String(params.page));
+        return apiFetch<WebhookHistoryResponse>(`/api/webhooks/${id}/history?${query.toString()}`);
+    },
+};
 
 // ─── Type Definitions ───
 export interface ApiUser {
@@ -414,4 +461,78 @@ export interface InvoiceItem {
 export interface InvoicesResponse {
     invoices: InvoiceItem[];
     totalPaid: number;
+}
+
+// ─── Webhook Types ───
+export interface WebhookConfig {
+    id: number;
+    name: string;
+    url: string;
+    authConfigured: boolean;
+    isActive: boolean;
+    lastTestedAt?: string;
+    lastTestStatus?: 'success' | 'failed';
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface WebhookCreateData {
+    name: string;
+    url: string;
+    basicUsername?: string;
+    basicPassword?: string;
+}
+
+export interface WebhookHistoryItem {
+    id: number;
+    articleId: string;
+    articleTitle: string;
+    status: 'success' | 'failed' | 'timeout';
+    statusCode?: number;
+    responseTimeMs?: number;
+    attemptNumber: number;
+    errorMessage?: string;
+    payload?: Record<string, unknown>;
+    createdAt: string;
+}
+
+export interface WebhookHistoryResponse {
+    history: WebhookHistoryItem[];
+    total: number;
+    page: number;
+    limit: number;
+}
+
+export interface WebhookTestResult {
+    success: boolean;
+    statusCode?: number;
+    responseTime?: number;
+    message: string;
+    error?: string;
+    responseBody?: string;
+}
+
+export interface DeliveryLogItem {
+    id: number;
+    webhookName: string;
+    status: 'success' | 'failed' | 'timeout';
+    statusCode?: number;
+    responseTimeMs?: number;
+    attemptNumber: number;
+    errorMessage?: string;
+    createdAt: string;
+}
+
+export interface ScheduleArticleData {
+    title: string;
+    scheduledAt: string;
+    webhookId: number;
+    timezone: string;
+}
+
+export interface ScheduleResponse {
+    articleId: string;
+    status: string;
+    scheduledAt: string;
+    webhookName: string;
 }

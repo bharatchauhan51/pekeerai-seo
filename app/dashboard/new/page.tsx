@@ -12,10 +12,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import {
-    articleApi, billingApi,
+    articleApi, billingApi, webhookApi,
     SerpResult, OutlineItem, ArticleMeta, FaqItem, SeoScoreMetrics, CalendarEvent, ArticleDetail,
     SubscriptionResponse, PlanItem, AdvancedOutline, AdvancedOutlineResponse,
-    StreamEvent
+    StreamEvent, WebhookConfig
 } from '../../lib/api';
 import CustomDropdown from '../../components/CustomDropdown';
 
@@ -1007,11 +1007,35 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
     };
 
     const handleDownloadHTML = () => {
-        const blob = new Blob([currentHtml], { type: 'text/html' });
+        const title = meta?.title || 'article';
+        const description = meta?.description || '';
+        const slug = meta?.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <meta name="description" content="${description}" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.7; color: #1a1a1a; }
+    h1, h2, h3 { line-height: 1.3; }
+    img { max-width: 100%; height: auto; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+    blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 1rem; color: #555; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+${currentHtml}
+</body>
+</html>`;
+        const blob = new Blob([fullHtml], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'article.html';
+        a.download = `${slug}.html`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -1041,6 +1065,9 @@ function Step3({ onNext, onBack, generation, onHtmlUpdate, keyword, meta }: {
                             }`}
                     >
                         {isSaved ? <><Check size={16} /> Saved</> : <><Save size={16} /> Save Draft</>}
+                    </button>
+                    <button onClick={handleDownloadHTML} className="flex items-center gap-2 px-5 py-2.5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-semibold rounded-full transition-all active:scale-95 text-sm">
+                        <Download size={16} /> Download HTML
                     </button>
                     <button onClick={onNext} className="flex items-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-300 text-black font-bold rounded-full transition-all active:scale-95 text-sm">Schedule Article <CalendarDays size={16} /></button>
                 </div>
@@ -1360,13 +1387,28 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduleTitle, setScheduleTitle] = useState('');
     const [scheduleDate, setScheduleDate] = useState('');
-    const [scheduleCms, setScheduleCms] = useState('WordPress (connected)');
+    const [scheduleTime, setScheduleTime] = useState('09:00');
+    const [scheduleTimezone, setScheduleTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const [selectedWebhookId, setSelectedWebhookId] = useState<number | null>(null);
+    const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
+    const [webhooksLoading, setWebhooksLoading] = useState(true);
+    const [scheduleError, setScheduleError] = useState('');
+    const [scheduledWebhookName, setScheduledWebhookName] = useState('');
+    const [scheduledDateTime, setScheduledDateTime] = useState('');
     const router = useRouter();
 
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const startDay = (new Date(now.getFullYear(), now.getMonth(), 1).getDay() + 6) % 7; // Monday-based
+
+    // Common timezones for dropdown
+    const timezones = [
+        'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+        'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+        'Asia/Dubai', 'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo',
+        'Australia/Sydney', 'Pacific/Auckland'
+    ];
 
     useEffect(() => {
         articleApi.calendar(currentMonth).then(({ data }) => {
@@ -1378,35 +1420,95 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
         setScheduleDate(tomorrow.toISOString().split('T')[0]);
     }, [currentMonth]);
 
+    // Fetch webhooks
+    useEffect(() => {
+        const fetchWebhooks = async () => {
+            setWebhooksLoading(true);
+            const { data } = await webhookApi.list();
+            if (data) {
+                setWebhooks(data.webhooks);
+                // Auto-select first active webhook
+                const activeWh = data.webhooks.find(w => w.isActive);
+                if (activeWh) setSelectedWebhookId(activeWh.id);
+            }
+            setWebhooksLoading(false);
+        };
+        fetchWebhooks();
+    }, []);
+
     const handleSchedule = async () => {
         if (!generation) return;
+        if (!selectedWebhookId) {
+            setScheduleError('Please select a webhook to deliver the article to.');
+            return;
+        }
+        if (!scheduleDate) {
+            setScheduleError('Please select a publish date.');
+            return;
+        }
+
+        setScheduleError('');
         setIsScheduling(true);
 
-        const { error } = await articleApi.schedule(generation.articleId, {
-            title: scheduleTitle,
-            publishDate: scheduleDate,
-            cmsDestination: scheduleCms,
-            status: 'scheduled',
+        // Build ISO datetime string
+        const scheduledAt = `${scheduleDate}T${scheduleTime}:00`;
+
+        const { data, error } = await articleApi.schedule(generation.articleId, {
+            title: scheduleTitle || 'Untitled Article',
+            scheduledAt,
+            webhookId: selectedWebhookId,
+            timezone: scheduleTimezone,
         });
 
         setIsScheduling(false);
 
-        if (!error) {
+        if (!error && data) {
+            setScheduledWebhookName(data.webhookName || webhooks.find(w => w.id === selectedWebhookId)?.name || '');
+            setScheduledDateTime(`${scheduleDate} at ${scheduleTime}`);
             setIsScheduled(true);
             setTimeout(() => {
                 setShowModal(false);
                 router.push('/dashboard');
-            }, 1500);
+            }, 2500);
+        } else if (error) {
+            setScheduleError(error);
+        }
+    };
+
+    const handlePublishNow = async () => {
+        if (!generation || !selectedWebhookId) {
+            setScheduleError('Please select a webhook to deliver the article to.');
+            return;
+        }
+
+        setScheduleError('');
+        setIsScheduling(true);
+
+        const { data, error } = await articleApi.deliverNow(generation.articleId, selectedWebhookId);
+
+        setIsScheduling(false);
+
+        if (!error && data) {
+            setScheduledWebhookName(data.webhookName || webhooks.find(w => w.id === selectedWebhookId)?.name || '');
+            setScheduledDateTime('Now');
+            setIsScheduled(true);
+            setTimeout(() => {
+                setShowModal(false);
+                router.push('/dashboard');
+            }, 2500);
+        } else if (error) {
+            setScheduleError(error);
         }
     };
 
     const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const selectedWebhook = webhooks.find(w => w.id === selectedWebhookId);
 
     return (
         <div className="animate-fade-in">
             <div className="text-center mb-10">
                 <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Schedule & <span className="text-lime-400">Publish</span></h2>
-                <p className="text-neutral-400 max-w-lg mx-auto">Pick a date on your content calendar. Your article will be automatically exported to your connected CMS.</p>
+                <p className="text-neutral-400 max-w-lg mx-auto">Pick a date and time, then deliver your article to your configured webhook automatically.</p>
             </div>
             <div className="flex items-center justify-between mb-8">
                 <button onClick={onBack} className="flex items-center gap-2 px-5 py-2.5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-semibold rounded-full transition-all text-sm"><ChevronLeft size={16} /> Back</button>
@@ -1414,12 +1516,15 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
                     Schedule This Article <Check size={16} />
                 </button>
             </div>
+
+            {/* Content Calendar */}
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 sm:p-8 mb-8">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-bold text-white">{monthName}</h3>
                     <div className="flex items-center gap-3 text-xs">
                         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-lime-400" /> Published</span>
                         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-400" /> Scheduled</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400" /> Failed</span>
                         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-neutral-500" /> Draft</span>
                     </div>
                 </div>
@@ -1433,13 +1538,15 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
                     {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                         const event = calendarEvents.find(e => e.day === day);
                         const isSelected = selectedDay === day;
+                        const isToday = day === now.getDate();
                         return (
                             <button key={day} onClick={() => { setSelectedDay(day); if (!event) setShowModal(true); }}
                                 className={`relative p-2 h-20 sm:h-24 rounded-xl text-left text-xs border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 ${isSelected ? 'border-lime-400/50 bg-lime-400/5' : event ? 'border-white/10 bg-white/[0.02] hover:border-white/20' : 'border-white/5 hover:border-white/10 hover:bg-white/[0.02]'}`}>
-                                <span className={`font-bold ${isSelected ? 'text-lime-400' : 'text-neutral-400'}`}>{day}</span>
+                                <span className={`font-bold ${isToday ? 'text-lime-400' : isSelected ? 'text-lime-400' : 'text-neutral-400'}`}>{day}</span>
+                                {isToday && <span className="ml-1 text-[8px] font-bold text-lime-400/60 uppercase">today</span>}
                                 {event && (
                                     <div className="mt-1">
-                                        <div className={`w-1.5 h-1.5 rounded-full mb-1 ${event.status === 'published' ? 'bg-lime-400' : event.status === 'scheduled' ? 'bg-blue-400' : 'bg-neutral-500'}`} />
+                                        <div className={`w-1.5 h-1.5 rounded-full mb-1 ${event.status === 'published' ? 'bg-lime-400' : event.status === 'scheduled' ? 'bg-blue-400' : event.status === 'failed' ? 'bg-red-400' : 'bg-neutral-500'}`} />
                                         <div className="text-[10px] text-neutral-400 truncate leading-tight hidden sm:block">{event.title}</div>
                                     </div>
                                 )}
@@ -1457,12 +1564,12 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
                         <p className="text-neutral-500 text-sm text-center py-4">No upcoming events.</p>
                     ) : calendarEvents.filter(e => e.status !== 'published').map((event, i) => (
                         <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
-                            <div className={`w-2 h-10 rounded-full shrink-0 ${event.status === 'scheduled' ? 'bg-blue-400' : 'bg-neutral-500'}`} />
+                            <div className={`w-2 h-10 rounded-full shrink-0 ${event.status === 'scheduled' ? 'bg-blue-400' : event.status === 'failed' ? 'bg-red-400' : 'bg-neutral-500'}`} />
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-semibold text-white truncate">{event.title}</div>
-                                <div className="text-xs text-neutral-500">Day {event.day} · {event.status === 'scheduled' ? 'Auto-publish' : 'Needs review'}</div>
+                                <div className="text-xs text-neutral-500">Day {event.day} · {event.status === 'scheduled' ? 'Auto-publish via webhook' : event.status === 'failed' ? 'Delivery failed' : 'Needs review'}</div>
                             </div>
-                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${event.status === 'scheduled' ? 'bg-blue-400/10 text-blue-400' : 'bg-white/5 text-neutral-500'}`}>{event.status}</span>
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${event.status === 'scheduled' ? 'bg-blue-400/10 text-blue-400' : event.status === 'failed' ? 'bg-red-400/10 text-red-400' : 'bg-white/5 text-neutral-500'}`}>{event.status}</span>
                         </div>
                     ))}
                 </div>
@@ -1470,15 +1577,24 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
 
             {/* Schedule Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={() => !isScheduled && setShowModal(false)}>
-                    <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6" onClick={() => !isScheduled && setShowModal(false)}>
+                    <div className="bg-[#111] border border-white/10 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         {isScheduled ? (
                             <div className="text-center py-8">
                                 <div className="w-16 h-16 bg-lime-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Check size={32} className="text-lime-400" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2">Article Scheduled!</h3>
-                                <p className="text-neutral-400 text-sm">Redirecting to your dashboard...</p>
+                                <p className="text-sm text-neutral-400 mb-1">&ldquo;{scheduleTitle || 'Untitled Article'}&rdquo;</p>
+                                <div className="flex items-center justify-center gap-2 text-xs text-neutral-500 mt-3">
+                                    <Calendar size={13} className="text-lime-400" />
+                                    <span>{scheduledDateTime}</span>
+                                </div>
+                                <div className="flex items-center justify-center gap-2 text-xs text-neutral-500 mt-1.5">
+                                    <Globe size={13} className="text-lime-400" />
+                                    <span>Delivers to: <strong className="text-white">{scheduledWebhookName}</strong></span>
+                                </div>
+                                <p className="text-xs text-neutral-600 mt-4">Redirecting to your dashboard...</p>
                             </div>
                         ) : (
                             <>
@@ -1486,32 +1602,123 @@ function Step4({ onBack, generation }: { onBack: () => void; generation: Generat
                                     <h3 className="text-xl font-bold text-white">Schedule Article</h3>
                                     <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-neutral-400 transition-colors"><X size={20} /></button>
                                 </div>
-                                <div className="space-y-4">
+                                <div className="space-y-5">
+                                    {/* Title */}
                                     <div>
-                                        <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Article Title</label>
-                                        <input type="text" value={scheduleTitle} onChange={(e) => setScheduleTitle(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50" />
+                                        <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Article Title</label>
+                                        <input type="text" value={scheduleTitle} onChange={(e) => setScheduleTitle(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-lime-400/30 transition-all placeholder:text-neutral-600" placeholder="Enter article title" />
                                     </div>
+
+                                    {/* Date & Time */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Publish Date</label>
+                                            <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-lime-400/30 transition-all" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Time</label>
+                                            <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-lime-400/30 transition-all" />
+                                        </div>
+                                    </div>
+
+                                    {/* Timezone */}
                                     <div>
-                                        <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Publish Date</label>
-                                        <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50" />
+                                        <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Timezone</label>
+                                        <select
+                                            value={scheduleTimezone}
+                                            onChange={(e) => setScheduleTimezone(e.target.value)}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-lime-400/30 transition-all appearance-none cursor-pointer"
+                                        >
+                                            {timezones.map(tz => (
+                                                <option key={tz} value={tz} className="bg-[#111] text-white">{tz.replace('_', ' ')}</option>
+                                            ))}
+                                        </select>
                                     </div>
+
+                                    {/* Webhook Selector */}
                                     <div>
-                                        <CustomDropdown
-                                            label="CMS Destination"
-                                            value={scheduleCms}
-                                            onChange={setScheduleCms}
-                                            options={[
-                                                { label: 'WordPress (connected)', value: 'WordPress (connected)' },
-                                                { label: 'Webflow', value: 'Webflow' },
-                                                { label: 'Ghost', value: 'Ghost' },
-                                                { label: 'Custom API', value: 'Custom API' }
-                                            ]}
-                                        />
+                                        <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Deliver Via Webhook</label>
+                                        {webhooksLoading ? (
+                                            <div className="flex items-center gap-2 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+                                                <Loader2 size={14} className="animate-spin text-neutral-500" />
+                                                <span className="text-xs text-neutral-500">Loading webhooks...</span>
+                                            </div>
+                                        ) : webhooks.length === 0 ? (
+                                            <div className="p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl">
+                                                <p className="text-sm text-amber-400 font-semibold mb-1">No webhooks configured</p>
+                                                <p className="text-xs text-neutral-500 mb-3">You need to set up a webhook endpoint before scheduling articles.</p>
+                                                <Link
+                                                    href="/dashboard/account/webhooks"
+                                                    className="inline-flex items-center gap-1.5 text-xs font-bold text-lime-400 hover:text-lime-300 transition-colors"
+                                                >
+                                                    Set up a webhook <ChevronRight size={14} />
+                                                </Link>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {webhooks.filter(w => w.isActive).map(wh => {
+                                                    const isSelected = selectedWebhookId === wh.id;
+                                                    const statusDot = wh.lastTestStatus === 'success'
+                                                        ? 'bg-lime-400 shadow-[0_0_4px_rgba(163,230,53,0.4)]'
+                                                        : wh.lastTestStatus === 'failed'
+                                                            ? 'bg-red-400'
+                                                            : 'bg-neutral-600';
+                                                    return (
+                                                        <button
+                                                            key={wh.id}
+                                                            onClick={() => setSelectedWebhookId(wh.id)}
+                                                            className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all duration-200 ${isSelected
+                                                                ? 'border-lime-400/40 bg-lime-400/[0.05] ring-1 ring-lime-400/20'
+                                                                : 'border-white/5 hover:border-white/15 hover:bg-white/[0.02]'
+                                                            }`}
+                                                        >
+                                                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusDot}`} />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-sm font-semibold text-white truncate">{wh.name}</div>
+                                                                <div className="text-[11px] text-neutral-500 font-mono truncate">{wh.url}</div>
+                                                            </div>
+                                                            {isSelected && (
+                                                                <div className="w-5 h-5 rounded-full bg-lime-400/20 flex items-center justify-center shrink-0">
+                                                                    <Check size={12} className="text-lime-400" />
+                                                                </div>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                                <Link
+                                                    href="/dashboard/account/webhooks"
+                                                    className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 hover:text-lime-400 transition-colors pt-1"
+                                                >
+                                                    Manage webhooks <ChevronRight size={12} />
+                                                </Link>
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {/* Error */}
+                                    {scheduleError && (
+                                        <p className="text-red-400 text-xs text-center">{scheduleError}</p>
+                                    )}
                                 </div>
-                                <button onClick={handleSchedule} disabled={isScheduling} className="mt-6 w-full py-3.5 bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-black font-bold rounded-full transition-all active:scale-95 flex items-center justify-center gap-2">
-                                    {isScheduling ? <><Loader2 size={18} className="animate-spin" /> Scheduling...</> : <>Confirm & Schedule <Check size={18} /></>}
-                                </button>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-3 mt-6">
+                                    <button
+                                        onClick={handlePublishNow}
+                                        disabled={isScheduling || !selectedWebhookId}
+                                        className="flex-1 py-3 border border-lime-400/30 text-lime-400 hover:bg-lime-400/10 disabled:opacity-30 disabled:cursor-not-allowed font-semibold text-sm rounded-full transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        {isScheduling ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                                        Publish Now
+                                    </button>
+                                    <button
+                                        onClick={handleSchedule}
+                                        disabled={isScheduling || !selectedWebhookId}
+                                        className="flex-1 py-3 bg-lime-400 hover:bg-lime-300 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm rounded-full transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        {isScheduling ? <><Loader2 size={16} className="animate-spin" /> Scheduling...</> : <>Confirm & Schedule <Check size={16} /></>}
+                                    </button>
+                                </div>
                             </>
                         )}
                     </div>
@@ -1643,6 +1850,7 @@ function NewArticlePageInner() {
                     <div className="hidden md:flex items-center gap-1 text-sm">
                         <Link href="/dashboard" className="px-3.5 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">Dashboard</Link>
                         <Link href="/dashboard/account" className="px-3.5 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">Account</Link>
+                        <Link href="/dashboard/account/webhooks" className="px-3.5 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">Integrations</Link>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                         <div className="w-px h-6 bg-white/10 hidden sm:block mr-1" />
@@ -1664,6 +1872,7 @@ function NewArticlePageInner() {
                         <div className="px-4 py-3 flex flex-col gap-1">
                             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="py-3 px-4 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors">Dashboard</Link>
                             <Link href="/dashboard/account" onClick={() => setMobileMenuOpen(false)} className="py-3 px-4 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors">Account</Link>
+                            <Link href="/dashboard/account/webhooks" onClick={() => setMobileMenuOpen(false)} className="py-3 px-4 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors">Integrations</Link>
                         </div>
                     </div>
                 )}

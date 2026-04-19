@@ -206,6 +206,7 @@ function AccountPageInner() {
                     <div className="hidden md:flex items-center gap-1 text-sm">
                         <Link href="/dashboard" className="px-3.5 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">Dashboard</Link>
                         <Link href="/dashboard/account" className="px-3.5 py-2 rounded-lg text-white bg-white/[0.06] font-semibold transition-colors">Account</Link>
+                        <Link href="/dashboard/account/webhooks" className="px-3.5 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-colors">Integrations</Link>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
@@ -233,6 +234,7 @@ function AccountPageInner() {
                         <div className="px-4 py-3 flex flex-col gap-1">
                             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="py-3 px-4 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors">Dashboard</Link>
                             <Link href="/dashboard/account" onClick={() => setMobileMenuOpen(false)} className="py-3 px-4 rounded-lg text-white bg-white/[0.06] font-semibold text-sm">Account</Link>
+                            <Link href="/dashboard/account/webhooks" onClick={() => setMobileMenuOpen(false)} className="py-3 px-4 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors">Integrations</Link>
                         </div>
                     </div>
                 )}

@@ -570,7 +570,7 @@ export default function App() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-300">
               <button onClick={openModal} className="w-full sm:w-auto px-8 py-4 bg-lime-400 hover:bg-lime-300 text-black rounded-full font-semibold text-lg flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(163,230,53,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]">
-                Start Pro Plan - $9/mo <ArrowRight size={20} />
+                Start Pro Plan - $29/mo <ArrowRight size={20} />
               </button>
               <a href="#how-it-works" onClick={(e) => scrollToSection(e, 'how-it-works')} className="w-full sm:w-auto px-8 py-4 border border-white/20 hover:border-white/40 text-white rounded-full font-semibold text-lg flex items-center justify-center gap-2 transition-all hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]">
                 See How It Works
@@ -843,7 +843,7 @@ export default function App() {
                     <span className="text-neutral-500">/month</span>
                   </div>
                   <div className="border-t border-white/10 pt-6 mb-8 flex-1">
-                    {['150 SEO Articles / month', 'Competitor URL Analysis', 'Advanced AI Guardrails', '24/7 Priority Support'].map((f, i) => (
+                    {['100 SEO Articles / month', 'Competitor URL Analysis', 'Advanced AI Guardrails', '24/7 Priority Support'].map((f, i) => (
                       <div key={i} className="flex items-start gap-3 mb-4">
                         <CheckCircle2 size={18} className="text-lime-400 mt-0.5 flex-shrink-0" />
                         <span className="text-neutral-300 text-sm">{f}</span>
