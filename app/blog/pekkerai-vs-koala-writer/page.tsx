@@ -86,7 +86,7 @@ export default function BlogPost() {
 
                         <h2 id="summary" className="text-2xl font-bold text-white mt-12 mb-6">1. PekkerAI vs Koala Writer — The 30-Second Summary</h2>
                         <p>
-                            Both tools turn a keyword into a publish-ready SEO article with minimal manual effort. Both start at $9/month. Both include SERP analysis, auto-generated headings, and meta data. At the surface level they look almost identical — but the differences are meaningful once you understand how each tool is positioned.
+                            Both tools turn a keyword into a publish-ready SEO article with minimal manual effort. Both start at $9/month. Both include SERP analysis, auto-generated headings, and meta data. At the surface level they look almost identical — but the differences are meaningful once you understand how each tool is positioned. (If you&apos;re evaluating <em>optimisation</em> tools instead of generation tools, our <Link href="/blog/neuronwriter-vs-pekkerai" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">NeuronWriter vs PekkerAI comparison</Link> covers that category.)
                         </p>
 
                         <div className="overflow-x-auto my-8">

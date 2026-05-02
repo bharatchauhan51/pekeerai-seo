@@ -325,7 +325,7 @@ export default function BlogPost() {
                         {/* Section 5 — NeuronWriter */}
                         <h2 id="neuronwriter" className="text-2xl font-bold text-white mt-12 mb-6">5. #3 NeuronWriter — Best Surfer-Like Experience</h2>
                         <p>
-                            If you like Surfer SEO&apos;s interface but hate the price, NeuronWriter is the closest direct replacement. It uses NLP-based content optimization, SERP analysis with competitor breakdowns, and an in-app content editor with real-time scoring — all the things that made Surfer popular, at roughly one-quarter of the cost.
+                            If you like Surfer SEO&apos;s interface but hate the price, NeuronWriter is the closest direct replacement. It uses NLP-based content optimization, SERP analysis with competitor breakdowns, and an in-app content editor with real-time scoring — all the things that made Surfer popular, at roughly one-quarter of the cost. For a deeper head-to-head on whether NeuronWriter or a generation tool is the right fit, see our <Link href="/blog/neuronwriter-vs-pekkerai" className="text-lime-400 hover:text-lime-300 underline decoration-lime-400/30 underline-offset-4 transition-colors">NeuronWriter vs PekkerAI comparison</Link>.
                         </p>
 
                         <div className="grid sm:grid-cols-2 gap-4 my-8">

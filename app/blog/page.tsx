@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const POSTS = [
     {
+        slug: 'neuronwriter-vs-pekkerai',
+        title: 'NeuronWriter vs PekkerAI: The Honest Comparison & Best Alternative (2026)',
+        description: "NeuronWriter optimises content. PekkerAI creates it. Honest 2026 comparison of pricing, NLP scoring, Chrome extension, and the right NeuronWriter alternative for solo founders.",
+        date: 'May 2026',
+        category: 'Comparison',
+    },
+    {
         slug: 'seo-freelancer-scaling-playbook',
         title: 'SEO Freelancer Scaling Playbook: How to Manage 10 Clients Without Hiring',
         description: "Learn how to scale your SEO freelancer business to 10+ clients without hiring. Systemise keyword research, use AI for first drafts, and price per article — not per hour.",
